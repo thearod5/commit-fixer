@@ -18,11 +18,13 @@ INSTRUCTIONS_PROMPT = (
 )
 FORMAT_PROMPT = (
     "Output only valid json like so:\n\n"
+    "```json\n"
     "{\n"
     "\t\"diffs\": [\"diff desc 1\", \"diff desc 2\"],\n"
     "\t\"changes\": [\"change desc 1\", \"change desc 2\"],\n"
     "\t\"title\": \"commit title\""
     "\n}"
+    "\n```"
 )
 
 
@@ -53,7 +55,11 @@ def generate_summary(commit_message):
     start_index = response.find("```json")
     end_index = response.find("```", start_index + 1)
     json_str = response[start_index + 7:end_index]
-    json_dict = json.loads(json_str)
+    try:
+        json_dict = json.loads(json_str)
+    except Exception as e:
+        print(response)
+        raise e
     title = json_dict["title"]
     content = "\n".join(["- " + c for c in json_dict["changes"]]).strip()
     return title, content
@@ -104,8 +110,8 @@ def runner(repo_path: str = "."):
             print(content)
 
             title = input("Final title:")
-            confirmation = input("Do you want to update this commit? (yes/no): ")
-            if confirmation.lower() == 'yes':
+            confirmation = input("Do you want to update this commit? (y/n): ")
+            if confirmation.lower() == 'y':
                 new_message = f"{title}\n\n{content}"
 
                 # Amend the commit message
