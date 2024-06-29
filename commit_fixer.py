@@ -10,6 +10,20 @@ ALLOWED_MANAGERS = {
     "anthropic": lambda k: ChatAnthropic(anthropic_api_key=k, model_name='claude-3-sonnet-20240229'),
     "openai": lambda k: OpenAI(openai_api_key=k)
 }
+INSTRUCTIONS_PROMPT = (
+    "Produce the JSON output to summarize the given commit changes. "
+    "Each diff should be converted to natural language. "
+    "Each change should group the diffs into a behavioral change."
+    "The title should describe what the changes ultimately accomplish."
+)
+FORMAT_PROMPT = (
+    "Output only valid json like so:\n\n"
+    "{\n"
+    "\t\"diffs\": [\"diff desc 1\", \"diff desc 2\"],\n"
+    "\t\"changes\": [\"change desc 1\", \"change desc 2\"],\n"
+    "\t\"title\": \"commit title\""
+    "\n}"
+)
 
 
 def get_llm_manager():
@@ -30,21 +44,7 @@ def get_commit_diff(repo, commit):
 
 
 def generate_summary(commit_message):
-    instructions_details = (
-        "Produce the JSON output to summarize the given commit changes. "
-        "Each diff should be converted to natural language. "
-        "Each change should group the diffs into a behavioral change."
-        "The title should describe what the changes ultimately accomplish."
-    )
-    format_desc = (
-        "Output only valid json like so:\n\n"
-        "{\n"
-        "\t\"diffs\": [\"diff desc 1\", \"diff desc 2\"],\n"
-        "\t\"changes\": [\"change desc 1\", \"change desc 2\"],\n"
-        "\t\"title\": \"commit title\""
-        "\n}"
-    )
-    system_prompt = "\n\n".join([instructions_details, format_desc])
+    system_prompt = "\n\n".join([INSTRUCTIONS_PROMPT, FORMAT_PROMPT])
     llm_manager = get_llm_manager()
     response = llm_manager.invoke([
         ("system", system_prompt),
