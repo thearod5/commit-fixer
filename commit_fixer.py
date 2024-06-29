@@ -1,11 +1,15 @@
+import json
 import os
 
 import git
 from dotenv import load_dotenv
-from langchain.llms import Anthropic, OpenAI
-from langchain.prompts import ChatPromptTemplate
+from langchain_anthropic import ChatAnthropic
+from langchain_community.llms import OpenAI
 
-ALLOWED_MANAGERS = {"anthropic": lambda k: Anthropic(anthropic_api_key=k), "openai": lambda k: OpenAI(openai_api_key=k)}
+ALLOWED_MANAGERS = {
+    "anthropic": lambda k: ChatAnthropic(anthropic_api_key=k, model_name='claude-3-sonnet-20240229'),
+    "openai": lambda k: OpenAI(openai_api_key=k)
+}
 
 
 def get_llm_manager():
@@ -20,21 +24,39 @@ def get_llm_manager():
 
 # Function to get diff of a commit
 def get_commit_diff(repo, commit):
-    diffs = commit.diff(commit.parents[0], create_patch=True) if commit.parents else commit.diff(None, create_patch=True)
+    diffs = commit.parents[0].diff(commit, create_patch=True) if commit.parents else commit.diff(None, create_patch=True)
     diff_text = '\n'.join(d.diff.decode('utf-8') for d in diffs)
     return diff_text
 
 
 def generate_summary(commit_message):
-    llm_manager = get_llm_manager()
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", f"Summarize the following set of changes into a commit description."),
-            ("human", f"{commit_message}")]
-
+    instructions_details = (
+        "Produce the JSON output to summarize the given commit changes. "
+        "Each diff should be converted to natural language. "
+        "Each change should group the diffs into a behavioral change."
+        "The title should describe what the changes ultimately accomplish."
     )
-    response = prompt.execute()
-    return response['text'].strip()
+    format_desc = (
+        "Output only valid json like so:\n\n"
+        "{\n"
+        "\t\"diffs\": [\"diff desc 1\", \"diff desc 2\"],\n"
+        "\t\"changes\": [\"change desc 1\", \"change desc 2\"],\n"
+        "\t\"title\": \"commit title\""
+        "\n}"
+    )
+    system_prompt = "\n\n".join([instructions_details, format_desc])
+    llm_manager = get_llm_manager()
+    response = llm_manager.invoke([
+        ("system", system_prompt),
+        ("human", commit_message)
+    ]).content
+    start_index = response.find("```json")
+    end_index = response.find("```", start_index + 1)
+    json_str = response[start_index + 7:end_index]
+    json_dict = json.loads(json_str)
+    title = json_dict["title"]
+    content = "\n".join(["- " + c for c in json_dict["changes"]]).strip()
+    return title, content
 
 
 def get_user_input(prompt_text):
@@ -56,30 +78,39 @@ def get_commits_to_push(repo, branch_name='main'):
     return commits_to_push
 
 
+def split_commit_message(commit_message):
+    title, *content = commit_message.split("\n\n")
+    content = "\n\n".join(content)
+    return title, content
+
+
 def runner(repo_path: str = "."):
     # Get commits to be pushed
     repo = git.Repo(repo_path)
     commits = get_commits_to_push(repo)
 
     for commit in commits:
-        original_message = commit.message
+        title, content = split_commit_message(commit.message)
+        print("-" * 25, "Commit", "-" * 25)
+        print("Title:", title)
+        print("\n", content)
+        print("-" * 50)
 
-        print(f"Commit: {original_message}")
         user_choice = get_user_input("Choose an option: (1) Keep as is, (2) Generate summary: ")
 
         if user_choice == '1':
             continue
         elif user_choice == '2':
             commit_diff = get_commit_diff(repo, commit)
-            summary = generate_summary(commit_diff)
-            print(f"Generated Summary: {summary}")
+            title, content = generate_summary(commit_diff)
+            print("-" * 25, "Generated", "-" * 25)
+            print("Title:", title)
+            print(content)
 
-            final_title = get_user_input("Enter the final title: ")
-            final_content = get_user_input("Enter the final content: ")
-
+            title = input("Final title:")
             confirmation = get_user_input("Do you want to update this commit? (yes/no): ")
             if confirmation.lower() == 'yes':
-                new_message = f"{final_title}\n\n{final_content}"
+                new_message = f"{title}\n\n{content}"
 
                 # Amend the commit message
                 repo.git.commit('--amend', '-m', new_message, '--no-edit', '--author', commit.author)
