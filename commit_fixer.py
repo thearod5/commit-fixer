@@ -86,6 +86,13 @@ def split_commit_message(commit_message):
     return title, content
 
 
+def print_commit(id_name: str, title: str, content: str):
+    print("-" * 25, id_name, "-" * 25)
+    print("Title:", title)
+    print(content)
+    print("-" * 50)
+
+
 def runner(repo_path: str = "."):
     # Get commits to be pushed
     repo = git.Repo(repo_path)
@@ -93,10 +100,7 @@ def runner(repo_path: str = "."):
 
     for commit in commits:
         title, content = split_commit_message(commit.message)
-        print("-" * 25, "Commit", "-" * 25)
-        print("Title:", title)
-        print("\n", content)
-        print("-" * 50)
+        print_commit("Commit", title, content)
 
         user_choice = input("Choose an option: (1) Keep as is, (2) Generate summary: ")
 
@@ -105,9 +109,7 @@ def runner(repo_path: str = "."):
         elif user_choice == '2':
             commit_diff = get_commit_diff(repo, commit)
             title, content = generate_summary(commit_diff)
-            print("-" * 25, "Generated", "-" * 25)
-            print("Title:", title)
-            print(content)
+            print_commit("Generated", title, content)
 
             title = input("Final title:")
             confirmation = input("Do you want to update this commit? (y/n): ")
