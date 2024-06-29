@@ -59,10 +59,6 @@ def generate_summary(commit_message):
     return title, content
 
 
-def get_user_input(prompt_text):
-    return input(prompt_text)
-
-
 def get_commits_to_push(repo, branch_name='main'):
     # Fetch the latest changes from the remote
     repo.remotes.origin.fetch()
@@ -96,7 +92,7 @@ def runner(repo_path: str = "."):
         print("\n", content)
         print("-" * 50)
 
-        user_choice = get_user_input("Choose an option: (1) Keep as is, (2) Generate summary: ")
+        user_choice = input("Choose an option: (1) Keep as is, (2) Generate summary: ")
 
         if user_choice == '1':
             continue
@@ -108,7 +104,7 @@ def runner(repo_path: str = "."):
             print(content)
 
             title = input("Final title:")
-            confirmation = get_user_input("Do you want to update this commit? (yes/no): ")
+            confirmation = input("Do you want to update this commit? (yes/no): ")
             if confirmation.lower() == 'yes':
                 new_message = f"{title}\n\n{content}"
 
