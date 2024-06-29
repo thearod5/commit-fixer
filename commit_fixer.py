@@ -1,22 +1,37 @@
+import os
+
 import git
+from dotenv import load_dotenv
 from langchain.llms import Anthropic, OpenAI
-from langchain.prompts import ChatPrompt
+from langchain.prompts import ChatPromptTemplate
 
-# Initialize the LLM providers
-openai = OpenAI(api_key='your_openai_api_key')
-anthropic = Anthropic(api_key='your_anthropic_api_key')
+ALLOWED_MANAGERS = {"anthropic": lambda k: Anthropic(anthropic_api_key=k), "openai": lambda k: OpenAI(openai_api_key=k)}
 
-# Choose your LLM provider
-llm = anthropic  # or anthropic
 
-# Initialize the repository
-repo = git.Repo('.')
+def get_llm_manager():
+    llm_manager_type = os.environ["LLM_MANAGER"]
+    assert llm_manager_type in ALLOWED_MANAGERS, f"Unrecognized manager `{llm_manager_type}`"
+    llm_key = os.environ["LLM_KEY"]
+
+    # Initialize the LLM providers
+    llm_manager = ALLOWED_MANAGERS[llm_manager_type](llm_key)
+    return llm_manager
+
+
+# Function to get diff of a commit
+def get_commit_diff(repo, commit):
+    diffs = commit.diff(commit.parents[0], create_patch=True) if commit.parents else commit.diff(None, create_patch=True)
+    diff_text = '\n'.join(d.diff.decode('utf-8') for d in diffs)
+    return diff_text
 
 
 def generate_summary(commit_message):
-    prompt = ChatPrompt(
-        llm=llm,
-        prompt=f"Summarize the following commit message:\n\n{commit_message}"
+    llm_manager = get_llm_manager()
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", f"Summarize the following set of changes into a commit description."),
+            ("human", f"{commit_message}")]
+
     )
     response = prompt.execute()
     return response['text'].strip()
@@ -26,9 +41,25 @@ def get_user_input(prompt_text):
     return input(prompt_text)
 
 
-def main():
+def get_commits_to_push(repo, branch_name='main'):
+    # Fetch the latest changes from the remote
+    repo.remotes.origin.fetch()
+
+    # Get the local branch and the corresponding remote branch
+    local_branch = repo.branches[branch_name]
+    remote_branch = repo.remotes.origin.refs[branch_name]
+
+    # Compare the local branch with the remote branch to find new commits
+    commit_filter = f'{remote_branch.commit.hexsha}..{local_branch.commit.hexsha}'
+    commits_to_push = list(repo.iter_commits(commit_filter))
+
+    return commits_to_push
+
+
+def runner(repo_path: str = "."):
     # Get commits to be pushed
-    commits = list(repo.iter_commits('origin/main..HEAD'))
+    repo = git.Repo(repo_path)
+    commits = get_commits_to_push(repo)
 
     for commit in commits:
         original_message = commit.message
@@ -39,7 +70,8 @@ def main():
         if user_choice == '1':
             continue
         elif user_choice == '2':
-            summary = generate_summary(original_message)
+            commit_diff = get_commit_diff(repo, commit)
+            summary = generate_summary(commit_diff)
             print(f"Generated Summary: {summary}")
 
             final_title = get_user_input("Enter the final title: ")
@@ -54,4 +86,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    load_dotenv()
+    runner()
