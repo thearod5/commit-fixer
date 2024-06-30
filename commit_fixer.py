@@ -28,6 +28,36 @@ FORMAT_PROMPT = (
 )
 
 
+def runner(repo_path: str = "."):
+    # Get commits to be pushed
+    repo = git.Repo(repo_path)
+    commits = get_commits_to_push(repo)
+
+    for commit in commits:
+        title, content = split_commit_message(commit.message)
+        print_commit("Commit", title, content)
+
+        user_choice = input("Choose an option: (1) Keep as is, (2) Generate summary: ")
+
+        if user_choice == '1':
+            continue
+        elif user_choice == '2':
+            redo_commit(commit, repo)
+
+
+def redo_commit(commit, repo):
+    commit_diff = get_commit_diff(repo, commit)
+    title, content = generate_summary(commit_diff)
+    print_commit("Generated", title, content)
+    title = input("Final title:")
+    confirmation = input("Do you want to update this commit? (y/n): ")
+    if confirmation.lower() == 'y':
+        new_message = f"{title}\n\n{content}"
+
+        # Amend the commit message
+        repo.git.commit('--amend', '-m', new_message, '--no-edit', '--author', commit.author)
+
+
 def get_llm_manager():
     llm_manager_type = os.environ["LLM_MANAGER"]
     assert llm_manager_type in ALLOWED_MANAGERS, f"Unrecognized manager `{llm_manager_type}`"
@@ -91,33 +121,6 @@ def print_commit(id_name: str, title: str, content: str):
     print("Title:", title)
     print(content)
     print("-" * 50)
-
-
-def runner(repo_path: str = "."):
-    # Get commits to be pushed
-    repo = git.Repo(repo_path)
-    commits = get_commits_to_push(repo)
-
-    for commit in commits:
-        title, content = split_commit_message(commit.message)
-        print_commit("Commit", title, content)
-
-        user_choice = input("Choose an option: (1) Keep as is, (2) Generate summary: ")
-
-        if user_choice == '1':
-            continue
-        elif user_choice == '2':
-            commit_diff = get_commit_diff(repo, commit)
-            title, content = generate_summary(commit_diff)
-            print_commit("Generated", title, content)
-
-            title = input("Final title:")
-            confirmation = input("Do you want to update this commit? (y/n): ")
-            if confirmation.lower() == 'y':
-                new_message = f"{title}\n\n{content}"
-
-                # Amend the commit message
-                repo.git.commit('--amend', '-m', new_message, '--no-edit', '--author', commit.author)
 
 
 if __name__ == "__main__":
