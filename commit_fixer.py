@@ -1,11 +1,13 @@
 import json
 import os
+from typing import Callable, Dict, List, Tuple
 
 import git
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
 from langchain_community.llms import OpenAI
 
+LINE_LENGTH = 90
 ALLOWED_MANAGERS = {
     "anthropic": lambda k: ChatAnthropic(anthropic_api_key=k, model_name='claude-3-sonnet-20240229'),
     "openai": lambda k: OpenAI(openai_api_key=k)
@@ -28,34 +30,146 @@ FORMAT_PROMPT = (
 )
 
 
-def runner(repo_path: str = "."):
-    # Get commits to be pushed
-    repo = git.Repo(repo_path)
-    commits = get_commits_to_push(repo)
-
-    for commit in commits:
-        title, content = split_commit_message(commit.message)
-        print_commit("Commit", title, content)
-
-        user_choice = input("Choose an option: (1) Keep as is, (2) Generate summary: ")
-
-        if user_choice == '1':
-            continue
-        elif user_choice == '2':
-            redo_commit(commit, repo)
+def run_menu(state: Dict, menu: Dict[str, Callable]):
+    commit = state["commit"]
+    title, changes = split_commit_message(commit.message)
+    print_commit("Commit", title, changes=changes)
+    selected_key = get_menu_option(menu.keys())
+    menu_action = menu[selected_key]
+    menu_action(state)
 
 
-def redo_commit(commit, repo):
+def get_menu_option(menu_keys):
+    index2item = {i: k for i, k in enumerate(menu_keys)}
+    display_message = "\n".join([f"{i + 1}) {k}" for i, k in index2item.items()])
+    print(display_message)
+    user_index = int(input("User >")) - 1
+
+    if user_index not in index2item:
+        print(f"{user_index} not in {index2item}")
+        return get_menu_option(menu_keys)
+
+    return index2item[user_index]
+
+
+"""
+Actions
+---
+- Edit title
+- Edit changes
+- Generated
+
+
+"""
+
+
+def generate_commit_summary(state: Dict):
+    repo = state["repo"]
+    commit = state["commit"]
     commit_diff = get_commit_diff(repo, commit)
-    title, content = generate_summary(commit_diff)
-    print_commit("Generated", title, content)
-    title = input("Final title:")
-    confirmation = input("Do you want to update this commit? (y/n): ")
-    if confirmation.lower() == 'y':
-        new_message = f"{title}\n\n{content}"
+    title, changes = generate_summary(commit_diff)
+    print_commit("Generated", title, changes=changes)
+    # Next
+    run_menu(state, MAIN_MENU)
 
-        # Amend the commit message
-        repo.git.commit('--amend', '-m', new_message, '--no-edit', '--author', commit.author)
+
+def edit_title(state: Dict):
+    commit_message = state["message"]
+    title, changes = split_commit_message(commit_message)
+    new_title = input("New Title > ")
+    if new_title == "":
+        print("Skipped")
+        return None
+    # Next
+    state["message"] = combine_commit_message(new_title, changes)
+    op_amend(state)
+    run_menu(state, MAIN_MENU)
+
+
+def edit_changes(state: Dict):
+    commit_message = state["message"]
+    title, changes = split_commit_message(commit_message)
+    changes_kept = []
+    for change in changes:
+        print("-" * LINE_LENGTH)
+        edit_change = get_yn(change, title="\nEdit/Delete this change?")
+
+        if edit_change:
+            new_change_desc = input("New Change (empty for remove):")
+            if new_change_desc == "":
+                print("Removed.")
+                continue
+            changes_kept.append(new_change_desc)
+        else:
+            changes_kept.append(change)
+            print("Keeping as is.")
+    # Next
+    state["message"] = combine_commit_message(title, changes_kept)
+    op_amend(state)
+    run_menu(state, MAIN_MENU)
+    print("Changes have been saved.\n\n")
+
+
+def get_yn(p: str, title: str = None):
+    if title:
+        print(title, "\n")
+
+    print(p)
+    answer = input("\n(y/n) >")
+    valid_answers = {"y", "n"}
+    if answer not in valid_answers:
+        return get_yn(p, title=title)
+    return answer == "y"
+
+
+def split_commit_message(commit_message: str) -> Tuple[str, List[str]]:
+    commit_title, *commit_changes = commit_message.split("\n\n")
+    if len(commit_changes) > 0:
+        commit_changes = [c.replace("- ", "") for c in commit_changes[0].split("\n") if len(c) > 0]
+    return commit_title, commit_changes
+
+
+def combine_commit_message(title: str, changes: List[str]) -> str:
+    content = change_to_message(changes)
+    if content == "":
+        return title
+    return f"{title}\n\n{content}"
+
+
+"""
+Operations
+- Amend
+- Continue
+---
+"""
+
+
+def op_amend(state):
+    if "message" not in state:
+        return
+    repo = state["repo"]
+    commit = state["commit"]
+    commit_message = state["message"]
+    repo.git.commit('--amend', '-m', commit_message, '--no-edit', '--author', commit.author)
+
+
+def generate_summary(commit_message):
+    system_prompt = "\n\n".join([INSTRUCTIONS_PROMPT, FORMAT_PROMPT])
+    llm_manager = get_llm_manager()
+    response = llm_manager.invoke([
+        ("system", system_prompt),
+        ("human", commit_message)
+    ]).content
+    start_index = response.find("```json")
+    end_index = response.find("```", start_index + 1)
+    json_str = response[start_index + 7:end_index]
+    try:
+        json_dict = json.loads(json_str)
+    except Exception as e:
+        print(response)
+        raise e
+    title = json_dict["title"]
+    return title, json_dict["changes"]
 
 
 def get_llm_manager():
@@ -75,26 +189,6 @@ def get_commit_diff(repo, commit):
     return diff_text
 
 
-def generate_summary(commit_message):
-    system_prompt = "\n\n".join([INSTRUCTIONS_PROMPT, FORMAT_PROMPT])
-    llm_manager = get_llm_manager()
-    response = llm_manager.invoke([
-        ("system", system_prompt),
-        ("human", commit_message)
-    ]).content
-    start_index = response.find("```json")
-    end_index = response.find("```", start_index + 1)
-    json_str = response[start_index + 7:end_index]
-    try:
-        json_dict = json.loads(json_str)
-    except Exception as e:
-        print(response)
-        raise e
-    title = json_dict["title"]
-    content = "\n".join(["- " + c for c in json_dict["changes"]]).strip()
-    return title, content
-
-
 def get_commits_to_push(repo, branch_name='main'):
     # Fetch the latest changes from the remote
     repo.remotes.origin.fetch()
@@ -110,19 +204,37 @@ def get_commits_to_push(repo, branch_name='main'):
     return commits_to_push
 
 
-def split_commit_message(commit_message):
-    title, *content = commit_message.split("\n\n")
-    content = "\n\n".join(content)
-    return title, content
-
-
-def print_commit(id_name: str, title: str, content: str):
-    print("-" * 25, id_name, "-" * 25)
+def print_commit(id_name: str, title: str, content: str = None, changes: List[str] = None):
+    if changes:
+        content = change_to_message(changes)
+    bar_length = ((LINE_LENGTH - len(id_name)) // 2) - 1  # 2 spaces
+    print("-" * bar_length, id_name, "-" * bar_length)
     print("Title:", title)
     print(content)
-    print("-" * 50)
+    print("-" * LINE_LENGTH)
+
+
+def change_to_message(changes):
+    content = '\n'.join(["- " + c for c in changes])
+    return content
 
 
 if __name__ == "__main__":
+    MAIN_MENU = {
+        "Generate": generate_commit_summary,
+        "Edit Title": edit_title,
+        "Edit Changes": edit_changes,
+        "Keep as is": lambda s: None
+    }
+    repo_path: str = "."
     load_dotenv()
-    runner()
+    r = git.Repo(repo_path)
+    commits = get_commits_to_push(r)
+
+    for c in commits:
+        commit_state = {
+            "repo": r,
+            "commit": c,
+            "message": c.message
+        }
+        run_menu(commit_state, MAIN_MENU)
