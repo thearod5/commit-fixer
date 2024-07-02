@@ -1,13 +1,12 @@
 import json
 import os
 import sys
-from typing import Callable, Dict
+from typing import List
 
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
 from langchain_community.llms import OpenAI
 
-LINE_LENGTH = 90
 ALLOWED_MANAGERS = {
     "anthropic": lambda k: ChatAnthropic(anthropic_api_key=k, model_name='claude-3-sonnet-20240229'),
     "openai": lambda k: OpenAI(openai_api_key=k)
@@ -28,28 +27,6 @@ FORMAT_PROMPT = (
     "\n}"
     "\n```"
 )
-
-
-def run_menu(state: Dict, menu: Dict[str, Callable]):
-    commit = state["commit"]
-    title, changes = split_commit_message(commit.message)
-    print_commit("Commit", title, changes=changes)
-    selected_key = get_menu_option(menu.keys())
-    menu_action = menu[selected_key]
-    menu_action(state)
-
-
-def get_menu_option(menu_keys):
-    index2item = {i: k for i, k in enumerate(menu_keys)}
-    display_message = "\n".join([f"{i + 1}) {k}" for i, k in index2item.items()])
-    print(display_message)
-    user_index = int(input("User >")) - 1
-
-    if user_index not in index2item:
-        print(f"{user_index} not in {index2item}")
-        return get_menu_option(menu_keys)
-
-    return index2item[user_index]
 
 
 def generate_summary(commit_message):
@@ -81,15 +58,15 @@ def get_llm_manager():
     return llm_manager
 
 
-def change_to_message(changes):
-    content = '\n'.join(["- " + c for c in changes])
+def change_to_message(change_messages: List[str]):
+    content = '\n'.join(["- " + c for c in change_messages])
     return content
 
 
 def read_file(f_path):
     with open(f_path, 'r') as file:
-        diffs = file.read()
-        return diffs
+        f_content = file.read()
+        return f_content
 
 
 if __name__ == "__main__":
@@ -99,5 +76,5 @@ if __name__ == "__main__":
     if len(diffs.strip()) == 0:
         sys.exit(0)
     title, changes = generate_summary(diffs)
-    change_body = "\n".join([f"- {c}" for c in changes])
+    change_body = change_to_message(changes)
     print(change_body)
