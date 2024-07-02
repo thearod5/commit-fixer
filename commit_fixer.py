@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple, Union
 
 import git
 from dotenv import load_dotenv
@@ -70,7 +70,8 @@ def generate_commit_summary(state: Dict):
     title, changes = generate_summary(commit_diff)
     print_commit("Generated", title, changes=changes)
     # Next
-    run_menu(state, MAIN_MENU)
+    state["message"] = combine_commit_message(title, changes)
+    run_menu(state, {**MAIN_MENU, "save": lambda s: op_amend(s)})
 
 
 def edit_title(state: Dict):
@@ -92,17 +93,20 @@ def edit_changes(state: Dict):
     changes_kept = []
     for change in changes:
         print("-" * LINE_LENGTH)
-        edit_change = get_yn(change, title="\nEdit/Delete this change?")
+        commit_action = get_user_option(change, {"continue": "c", "edit": "e", "delete": "d"})
 
-        if edit_change:
-            new_change_desc = input("New Change (empty for remove):")
-            if new_change_desc == "":
-                print("Removed.")
-                continue
+        if commit_action == "e":
+            new_change_desc = input("New Change:")
             changes_kept.append(new_change_desc)
-        else:
+            print("Updated.")
+        elif commit_action == "d":
+            print("Removed.")
+            continue
+        elif commit_action == "c":
             changes_kept.append(change)
             print("Keeping as is.")
+        else:
+            raise ValueError("Option not recognized.")
     # Next
     state["message"] = combine_commit_message(title, changes_kept)
     op_amend(state)
@@ -110,16 +114,24 @@ def edit_changes(state: Dict):
     print("Changes have been saved.\n\n")
 
 
-def get_yn(p: str, title: str = None):
-    if title:
-        print(title, "\n")
+def get_user_option(p: str, answers: Union[Dict, List], title: str = None):
+    if answers is None:
+        answers = ["y", "n"]
 
     print(p)
-    answer = input("\n(y/n) >")
-    valid_answers = {"y", "n"}
-    if answer not in valid_answers:
-        return get_yn(p, title=title)
-    return answer == "y"
+    if isinstance(answers, list):
+        options_display = f"({'/'.join(answers)})"
+    elif isinstance(answers, dict):
+        options_display1 = f"{'/'.join(answers.keys())}"
+        options_display2 = f"({'/'.join(answers.values())})"
+        options_display = f"{options_display1} {options_display2}"
+        answers = [v for k, v in answers.items()]
+    else:
+        raise Exception("Expected list or dict but got: {}".format(answers))
+    answer = input(f"\n({options_display} >")
+    if answer not in answers:
+        return get_user_option(p, answers, title=title)
+    return answer
 
 
 def split_commit_message(commit_message: str) -> Tuple[str, List[str]]:
@@ -219,6 +231,54 @@ def change_to_message(changes):
     return content
 
 
+def edit_commit_message(commit):
+    print(f"\nCurrent commit message:\n{commit.message}")
+    new_message = input("Enter new commit message (leave empty to keep current): ").strip()
+    return new_message if new_message else commit.message
+
+
+def rebase_commits(repo, commits):
+    # Temporarily checkout each commit, amend the message, and move HEAD
+    head = repo.head.commit
+    index = repo.index
+
+    for commit in commits:
+        print(f"Rebasing commit {commit.hexsha}")
+        new_message = edit_commit_message(commit)
+
+        # Create a new commit with the same tree and parent but new message
+        new_commit = repo.Commit.create_from_tree(
+            repo,
+            tree=commit.tree,
+            message=new_message,
+            parent_commits=commit.parents,
+            author=commit.author,
+            committer=commit.committer
+        )
+
+        # Move the branch pointer to the new commit
+        repo.git.rebase('--onto', new_commit.hexsha, commit.hexsha, 'HEAD')
+
+        # Update HEAD to point to the new commit
+        repo.head.reference = new_commit
+        index.write()
+
+    # Reset HEAD to original commit
+    repo.head.reference = head
+    index.write()
+    print("Rebase completed.")
+
+
+def llm_rename(commits):
+    for c in commits:
+        commit_state = {
+            "repo": r,
+            "commit": c,
+            "message": c.message
+        }
+        run_menu(commit_state, MAIN_MENU)
+
+
 if __name__ == "__main__":
     MAIN_MENU = {
         "Generate": generate_commit_summary,
@@ -229,12 +289,6 @@ if __name__ == "__main__":
     repo_path: str = "."
     load_dotenv()
     r = git.Repo(repo_path)
-    commits = get_commits_to_push(r)
-
-    for c in commits:
-        commit_state = {
-            "repo": r,
-            "commit": c,
-            "message": c.message
-        }
-        run_menu(commit_state, MAIN_MENU)
+    r_commits = get_commits_to_push(r)
+    rebase_commits(r, r_commits)
+    # llm_rename(r_commits)
