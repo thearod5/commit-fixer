@@ -96,6 +96,8 @@ if __name__ == "__main__":
     load_dotenv()
     diff_file = sys.argv[1]
     diffs = read_file(diff_file)
+    if len(diffs.strip()) == 0:
+        sys.exit(0)
     title, changes = generate_summary(diffs)
     change_body = "\n".join([f"- {c}" for c in changes])
     print(change_body)
