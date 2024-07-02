@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from typing import Callable, Dict, List, Tuple, Union
 
 import git
@@ -237,38 +238,6 @@ def edit_commit_message(commit):
     return new_message if new_message else commit.message
 
 
-def rebase_commits(repo, commits):
-    # Temporarily checkout each commit, amend the message, and move HEAD
-    head = repo.head.commit
-    index = repo.index
-
-    for commit in commits:
-        print(f"Rebasing commit {commit.hexsha}")
-        new_message = edit_commit_message(commit)
-
-        # Create a new commit with the same tree and parent but new message
-        new_commit = repo.Commit.create_from_tree(
-            repo,
-            tree=commit.tree,
-            message=new_message,
-            parent_commits=commit.parents,
-            author=commit.author,
-            committer=commit.committer
-        )
-
-        # Move the branch pointer to the new commit
-        repo.git.rebase('--onto', new_commit.hexsha, commit.hexsha, 'HEAD')
-
-        # Update HEAD to point to the new commit
-        repo.head.reference = new_commit
-        index.write()
-
-    # Reset HEAD to original commit
-    repo.head.reference = head
-    index.write()
-    print("Rebase completed.")
-
-
 def llm_rename(commits):
     for c in commits:
         commit_state = {
@@ -280,15 +249,16 @@ def llm_rename(commits):
 
 
 if __name__ == "__main__":
-    MAIN_MENU = {
-        "Generate": generate_commit_summary,
-        "Edit Title": edit_title,
-        "Edit Changes": edit_changes,
-        "Keep as is": lambda s: None
-    }
+    diffs = sys.stdin.read()
+    print("Diffs")
+    print(diffs)
+    summary = generate_summary(diffs)
     repo_path: str = "."
     load_dotenv()
     r = git.Repo(repo_path)
     r_commits = get_commits_to_push(r)
-    rebase_commits(r, r_commits)
-    # llm_rename(r_commits)
+    title, changes = llm_rename(r_commits)
+
+    change_body = "\n".join([f"- {c}" for c in changes])
+    print(change_body)
+    raise Exception("Not good")
