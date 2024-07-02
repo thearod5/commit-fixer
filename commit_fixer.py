@@ -15,22 +15,22 @@ INSTRUCTIONS_PROMPT = (
     "Produce the JSON output to summarize the given commit changes. "
     "Each diff should be converted to natural language. "
     "Each change should group the diffs into a behavioral change."
-    "The title should describe what the changes ultimately accomplish."
 )
-FORMAT_PROMPT = (
-    "Output only valid json like so:\n\n"
-    "```json\n"
-    "{\n"
-    "\t\"diffs\": [\"diff desc 1\", \"diff desc 2\"],\n"
-    "\t\"changes\": [\"change desc 1\", \"change desc 2\"],\n"
-    "\t\"title\": \"commit title\""
-    "\n}"
-    "\n```"
-)
+
+example_json = {
+    "diffs": ["diff desc 1", "diff desc 2"],
+    "changes": ["change desc 1", "change desc 2"]
+}
+
+
+def get_format_prompt() -> str:
+    example_json_str = json.dumps(example_json, indent=4)
+    return f"Output valid json like so:\n```json\n{example_json_str}\n```"
 
 
 def generate_summary(commit_message):
-    system_prompt = "\n\n".join([INSTRUCTIONS_PROMPT, FORMAT_PROMPT])
+    format_prompt = get_format_prompt()
+    system_prompt = "\n\n".join([INSTRUCTIONS_PROMPT, format_prompt])
     llm_manager = get_llm_manager()
     response = llm_manager.invoke([
         ("system", system_prompt),
@@ -41,11 +41,11 @@ def generate_summary(commit_message):
     json_str = response[start_index + 7:end_index]
     try:
         json_dict = json.loads(json_str)
+        change_summaries = json_dict["changes"]
+        return change_to_message(change_summaries)
     except Exception as e:
         print(response)
         raise e
-    title = json_dict["title"]
-    return title, json_dict["changes"]
 
 
 def get_llm_manager():
@@ -75,6 +75,5 @@ if __name__ == "__main__":
     diffs = read_file(diff_file)
     if len(diffs.strip()) == 0:
         sys.exit(0)
-    title, changes = generate_summary(diffs)
-    change_body = change_to_message(changes)
-    print(change_body)
+    diff_summary = generate_summary(diffs)
+    print(diff_summary)

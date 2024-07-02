@@ -1,0 +1,20 @@
+--- a/commit_fixer.py
++++ b/commit_fixer.py
+@@ -86,12 +86,6 @@ def change_to_message(changes):
+     return content
+
+
+-def edit_commit_message(commit):
+-    print(f"\nCurrent commit message:\n{commit.message}")
+-    new_message = input("Enter new commit message (leave empty to keep current): ").strip()
+-    return new_message if new_message else commit.message
+-
+-
+ def read_file(f_path):
+     with open(f_path, 'r') as file:
+         diffs = file.read()
+@@ -105,4 +99,3 @@ if __name__ == "__main__":
+     title, changes = generate_summary(diffs)
+     change_body = "\n".join([f"- {c}" for c in changes])
+     print(change_body)
+-    raise Exception("Not good")
