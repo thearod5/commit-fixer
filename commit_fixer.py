@@ -14,33 +14,37 @@ ALLOWED_MANAGERS = {
     "anthropic": lambda k: ChatAnthropic(anthropic_api_key=k, model_name='claude-3-sonnet-20240229'),
     "openai": lambda k: OpenAI(openai_api_key=k)
 }
-TITLE_INSTRUCTIONS = (
-    "Create title describing how the code is changing."
-)
+A = """
+adf
+adfasdf
+"""
+SUMMARIZE_INSTRUCTIONS = """
+You are a AI agent working on a software project to help users document their development practices.
 
-TITLE_FORMAT = {
-    "title": "commit title"
-}
+The first message will contain a project overview documenting its original vision.
+However, their software is undergoing some changes and they have not had time to update the documentation.
+Our job is detect what is changing and describe the system after the changes.
 
-SUMMARIZE_INSTRUCTIONS = (
-    "The user will present a file from their software project. "
-    "This file has been modified and its your job to describe how the system is changing. "
-    "Each file changed will also contain a summary of what it used to accomplish in the system and "
-    "your job is to describe how it is changing. "
-    "Produce JSON describing each file level change followed by a title of the overall set of changes.."
-)
+Each subsequent message will contain a change they have made. 
+Your job is the make sense of these changes and describe the new system behavior.
+Each of these messages will contain the file before the change followed by the diff of the changes.
+
+Create a JSON object summarizing each diff, synthesizing the major behavior changes to the system, and creating a title for the commit.
+"""
 
 SUMMARIZE_FORMAT = {
-    "changes": ["change desc 1", "change desc 2"],
+    "diffs": ["diff summary 1", "diff summary 2"],
+    "changes": ["change 1", "change 2"],
     "title": "commit title"
 }
 
 
-def generate_diff_summary(changes):
+def generate_diff_summary(changes, project_summary):
     prompt = create_change_prompt(changes)
     system_prompt = "\n\n".join([SUMMARIZE_INSTRUCTIONS, get_format_prompt(SUMMARIZE_FORMAT)])
     messages = [
         ("system", system_prompt),
+        ("human", project_summary),
         ("human", prompt)
     ]
     print("...generating...")
@@ -56,7 +60,8 @@ def create_change_prompt(changes: List[Dict]) -> str:
     for change in changes:
         change_prompt = []
         change_prompt.append(f"# File: {change['file']}")
-        change_prompt.append(f"## Functionality before change\n{change['summary']}")
+        change_prompt.append(f"## Original Specificaiton\n{change['summary']}")
+        change_prompt.append(f"## File Before Change\n{change['content_before']}")
         change_prompt.append(f"## Changes\n{change['diff']}")
         prompt += "\n\n".join(change_prompt)
 
@@ -97,6 +102,17 @@ def get_llm_manager():
     # Initialize the LLM providers
     llm_manager = ALLOWED_MANAGERS[llm_manager_type](llm_key)
     return llm_manager
+
+
+def get_file_content_before(repo, file_path):
+    """
+    Get the content of the file before the staged changes.
+    """
+    try:
+        content_before = repo.git.show(f'HEAD:{file_path}')
+    except git.exc.GitCommandError:
+        content_before = ""
+    return content_before
 
 
 def changes_to_message(change_messages: List[str]):
@@ -163,13 +179,15 @@ if __name__ == "__main__":
     changes = []
     for file, diff in file2diff.items():
         file_artifact = artifact_map[file]
+        content_before = get_file_content_before(repo, file)
         changes.append({
             "file": file,
             "diff": diff,
-            "summary": file_artifact["summary"] if file_artifact["summary"] != "" else file_artifact["content"]
+            "content_before": content_before,
+            "summary": file_artifact["summary"]
         })
 
-    title, changes = generate_diff_summary(changes)
+    title, changes = generate_diff_summary(changes, project_data["specification"])
 
     menu_options = ["Edit title", "Edit changes", "Add change", "Commit"]
     running = True
