@@ -4,3 +4,4 @@ venv
 *.env
 .idea
 *.cache
+__pycache__
