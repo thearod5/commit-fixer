@@ -22,6 +22,7 @@ httpcore==1.0.5
 httpx==0.27.0
 huggingface-hub==0.23.4
 idna==3.7
+install==1.3.5
 jiter==0.5.0
 jsonpatch==1.33
 jsonpointer==3.0.0
@@ -43,7 +44,9 @@ pydantic_core==2.18.4
 python-dotenv==1.0.1
 PyYAML==6.0.1
 requests==2.32.3
-safa-sdk-python
+safa @ file:///Users/albertorodriguez/projects/commit-fixer
+safa-sdk==0.1.1
+safa_cmd @ file:///Users/albertorodriguez/projects/commit-fixer
 smmap==5.0.1
 sniffio==1.3.1
 SQLAlchemy==2.0.31

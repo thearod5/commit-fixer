@@ -16,7 +16,7 @@ class LLMManager(ABC):
 
 
 ALLOWED_MANAGERS: Dict[str, Callable[[str], LLMManager]] = {
-    "anthropic": lambda k: ChatAnthropic(anthropic_api_key=k, model_name='claude-3-sonnet-20240229'),
+    "anthropic": lambda k: ChatAnthropic(anthropic_api_key=k, model_name='claude-3-sonnet-20240229', max_tokens=4096),
     "openai": lambda k: OpenAI(openai_api_key=k)
 }
 

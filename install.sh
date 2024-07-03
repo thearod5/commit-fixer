@@ -1,0 +1,1 @@
+pip install . && rm -rf build

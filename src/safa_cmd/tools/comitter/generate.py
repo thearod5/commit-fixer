@@ -1,8 +1,8 @@
 import json
 from typing import Dict, List
 
-from src.commit_fixer.data.file_change import FileChange
-from src.commit_fixer.llm_manager import get_llm_manager
+from safa_cmd.data.file_change import FileChange
+from safa_cmd.utils.llm_manager import get_llm_manager
 
 SUMMARIZE_INSTRUCTIONS = """
 You are a AI agent working on a software project to help users document their development practices.
@@ -11,11 +11,14 @@ The first message will contain a project overview documenting its original visio
 However, their software is undergoing some changes and they have not had time to update the documentation.
 Our job is detect what is changing and describe the system after the changes.
 
-Each subsequent message will contain a change they have made. 
+The subsequent message will contain a change they have made across all files.
 Your job is the make sense of these changes and describe the new system behavior.
-Each of these messages will contain the file before the change followed by the diff of the changes.
+Each of these messages will contain the file before the change, the file specification, and the diff of the changes.
 
-Create a JSON object summarizing each diff, synthesizing the major behavior changes to the system, and creating a title for the commit.
+Create a JSON object that:
+- summarizes each diff
+- synthesizes individual file changes into the major behavior change
+- creates a title for the entire set of changes
 """
 
 SUMMARIZE_FORMAT = {

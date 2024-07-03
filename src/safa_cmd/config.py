@@ -1,6 +1,8 @@
 import os
 from dataclasses import dataclass
 
+from dotenv import load_dotenv
+
 
 @dataclass
 class FixerConfig:
@@ -19,6 +21,7 @@ class FixerConfig:
 
     @staticmethod
     def from_env():
+        load_dotenv()
         repo_path = os.environ["REPO_PATH"]
         email = os.environ["SAFA_EMAIL"]
         password = os.environ["SAFA_PASSWORD"]

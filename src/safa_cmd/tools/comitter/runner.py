@@ -2,16 +2,20 @@ import sys
 from typing import Dict, List
 
 import git
-from safa.safa_client import Safa
-from safa.safa_store import SafaStore
+from safa_sdk.safa_client import Safa
+from safa_sdk.safa_store import SafaStore
 
-from src.commit_fixer.config import FixerConfig
-from src.commit_fixer.data.artifact_json import ArtifactJson
-from src.commit_fixer.data.file_change import FileChange
-from src.commit_fixer.generate import generate_summary
+from safa_cmd.config import FixerConfig
+from safa_cmd.data.artifact_json import ArtifactJson
+from safa_cmd.data.file_change import FileChange
+from safa_cmd.tools.comitter.generate import generate_summary
+from safa_cmd.utils.markdown import list_formatter
+from safa_cmd.utils.menu import prompt_option
 
 
-def run(config: FixerConfig):
+def run_committer(config: FixerConfig):
+    if config is None:
+        config = FixerConfig.from_env()
     project_data = get_safa_project(config)
     artifact_map = create_artifact_name_lookup(project_data["artifacts"])
 
@@ -52,21 +56,18 @@ def run_commit_menu(repo, title, changes):
     menu_options = ["Edit Title", "Edit Change", "Add Change", "Commit"]
     running = True
     while running:
-        print_commit_message(title, changes, delimiter_type="numbered")
-        print("\nOptions:")
-        for i, menu_option in enumerate(menu_options):
-            print(f"{i + 1})", menu_option)
-        option = input(">")
-        option_num = int(option)
+        print_commit_message(title, changes, format_type="numbered")
+        selected_option = prompt_option(menu_options)
+        option_num = menu_options.index(selected_option)
 
-        if option_num == 1:
+        if option_num == 0:
             title = input("New Title:")
-        elif option_num == 2:
+        elif option_num == 1:
             change_num = int(input("Change Number"))
             changes[change_num - 1] = input("New Change:")
-        elif option_num == 3:
+        elif option_num == 2:
             changes.append(input("New Change:"))
-        elif option_num == 4:
+        elif option_num == 3:
             repo.index.commit(to_commit_message(title, changes))
             running = False
         else:
@@ -149,21 +150,4 @@ def to_commit_message(title: str, changes: List[str], **kwargs) -> str:
     :param changes: List of changes in commit.
     :return: Commit message.
     """
-    return f"{title}\n\n{changes_to_message(changes, **kwargs)}"
-
-
-def changes_to_message(change_messages: List[str], delimiter_type="bullet"):
-    """
-    Formats list of changes as a Markdown list.
-    :param change_messages: List of diff summaries.
-    :param delimiter_type: Delimiter for changes.
-    :return: String delimited changes as a Markdown list.
-    """
-    if delimiter_type.lower() == "bullet":
-        formatter = lambda i, c: "- " + c
-    elif delimiter_type.lower() == "numbered":
-        formatter = lambda i, c: f"{i + 1}) " + c
-    else:
-        raise ValueError(f"")
-    content = '\n'.join([formatter(i, c) for i, c in enumerate(change_messages)])
-    return content
+    return f"{title}\n\n{list_formatter(changes, **kwargs)}"
