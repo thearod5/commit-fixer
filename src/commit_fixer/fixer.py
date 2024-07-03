@@ -53,6 +53,7 @@ def run_commit_menu(repo, title, changes):
     running = True
     while running:
         print_commit_message(title, changes, delimiter_type="numbered")
+        print("\nOptions:")
         for i, menu_option in enumerate(menu_options):
             print(f"{i + 1})", menu_option)
         option = input(">")
