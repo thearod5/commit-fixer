@@ -1,6 +1,5 @@
-from safa_cmd.config import FixerConfig
+from safa_cmd.config import SafaConfig
 
 
-def run(config: FixerConfig = None):
-    if config is None:
-        config = FixerConfig.from_env()
+def run(config: SafaConfig = None):
+    pass

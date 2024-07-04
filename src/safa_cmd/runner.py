@@ -1,6 +1,6 @@
 import sys
 
-from safa_cmd.config import FixerConfig
+from safa_cmd.config import SafaConfig
 from safa_cmd.tools.comitter.runner import run_committer
 from safa_cmd.utils.menu import prompt_option
 
@@ -11,7 +11,7 @@ TOOLS = {
 
 
 def run():
-    config: FixerConfig = FixerConfig.from_env()
+    config: SafaConfig = SafaConfig.from_env()
     menu_keys = list(TOOLS.keys())
 
     running = True

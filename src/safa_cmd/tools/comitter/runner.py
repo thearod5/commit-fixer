@@ -5,7 +5,7 @@ import git
 from safa_sdk.safa_client import Safa
 from safa_sdk.safa_store import SafaStore
 
-from safa_cmd.config import FixerConfig
+from safa_cmd.config import SafaConfig
 from safa_cmd.data.artifact_json import ArtifactJson
 from safa_cmd.data.file_change import FileChange
 from safa_cmd.tools.comitter.generate import generate_summary
@@ -13,9 +13,12 @@ from safa_cmd.utils.markdown import list_formatter
 from safa_cmd.utils.menu import prompt_option
 
 
-def run_committer(config: FixerConfig):
-    if config is None:
-        config = FixerConfig.from_env()
+def run_committer(config: SafaConfig):
+    """
+    Reads staged changes and generates commit details (i.e. title, changes). Allows user to edit afterwards.
+    :param config: The configuration of the tool.
+    :return:
+    """
     project_data = get_safa_project(config)
     artifact_map = create_artifact_name_lookup(project_data["artifacts"])
 
@@ -85,7 +88,7 @@ def get_file_content_before(repo, file_path):
     return content_before
 
 
-def get_safa_project(config: FixerConfig):
+def get_safa_project(config: SafaConfig):
     """
     Reads SAFA project.
     :param config: Configuration detailing account details and project.
