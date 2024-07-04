@@ -9,6 +9,7 @@ from safa_cmd.config import SafaConfig
 from safa_cmd.data.artifact_json import ArtifactJson
 from safa_cmd.data.file_change import FileChange
 from safa_cmd.tools.comitter.generate import generate_summary
+from safa_cmd.tools.comitter.git_helpers import get_file_content_before, get_staged_diffs, prompt_user_for_staging, show_changes
 from safa_cmd.utils.markdown import list_formatter
 from safa_cmd.utils.menu import prompt_option
 
@@ -23,6 +24,8 @@ def run_committer(config: SafaConfig):
     artifact_map = create_artifact_name_lookup(project_data["artifacts"])
 
     repo = git.Repo(config.repo_path)
+    changed_files = show_changes(repo)
+    prompt_user_for_staging(repo, changed_files)
     file2diff = get_staged_diffs(repo)
     if len(file2diff) == 0:
         print("No changes staged for commit.")
@@ -77,17 +80,6 @@ def run_commit_menu(repo, title, changes):
             raise Exception("Invalid option")
 
 
-def get_file_content_before(repo, file_path):
-    """
-    Get the content of the file before the staged changes.
-    """
-    try:
-        content_before = repo.git.show(f'HEAD:{file_path}')
-    except git.exc.GitCommandError:
-        content_before = None
-    return content_before
-
-
 def get_safa_project(config: SafaConfig):
     """
     Reads SAFA project.
@@ -99,29 +91,6 @@ def get_safa_project(config: SafaConfig):
     client.login(config.email, config.password)
     project_data = client.get_project_data(config.version_id)
     return project_data
-
-
-def get_staged_diffs(repo: git.Repo) -> Dict[str, str]:
-    """
-    Gets the changes changed and extracts their diffs.
-    :param repo: The repository to extract staged changes from.
-    :return: Map from file to diff.
-    """
-    staged_files = [item.a_path for item in repo.index.diff("HEAD")]
-
-    file2diff = {}
-    for file in staged_files:
-        try:
-            diff = repo.git.diff('HEAD', file)
-            file2diff[file] = diff
-        except git.exc.GitCommandError:
-            # Handle the case where the file has been deleted
-            content_before = get_file_content_before(repo, file)
-            if content_before:
-                diff = "\n".join(f"- {line}" for line in content_before.splitlines())
-                file2diff[file] = diff
-
-    return file2diff
 
 
 def create_artifact_name_lookup(artifacts: List[Dict]) -> Dict:
