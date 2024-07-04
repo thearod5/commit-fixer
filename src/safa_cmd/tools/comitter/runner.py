@@ -70,7 +70,7 @@ def create_file_changes(file2diff, artifact_map: Dict[str, ArtifactJson], repo) 
 
 
 def run_commit_menu(repo, title, changes):
-    menu_options = ["Edit Title", "Edit Change", "Add Change", "Commit"]
+    menu_options = ["Edit Title", "Edit Change", "Remove Change", "Add Change", "Commit"]
     running = True
     while running:
         print_commit_message(title, changes, format_type="numbered")
@@ -80,11 +80,14 @@ def run_commit_menu(repo, title, changes):
         if option_num == 0:
             title = input("New Title:")
         elif option_num == 1:
-            change_num = int(input("Change ID"))
+            change_num = int(input("Change ID:"))
             changes[change_num - 1] = input("New Change:")
         elif option_num == 2:
-            changes.append(input("New Change:"))
+            change_num = int(input("Change ID:"))
+            changes.pop(change_num - 1)
         elif option_num == 3:
+            changes.append(input("New Change:"))
+        elif option_num == 4:
             repo.index.commit(to_commit_message(title, changes))
             running = False
         else:

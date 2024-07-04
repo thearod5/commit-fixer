@@ -14,11 +14,11 @@ def prompt_option(options: List[str], retries=0, max_retries=3, title: str = "Op
         raise Exception("Max retries has been reached.")
 
     instructions = "Enter the options as a comma-delimited list (or 'a' for all)" if allow_many else "Enter the option number."
-    print(f"\n{title}:")
-    print(instructions)
 
+    print(f"\n{title}:")
     for i, option in enumerate(options):
         print(f"{i + 1})", option)
+    print(instructions)
 
     try:
         option = input(">").lower().strip()
