@@ -12,6 +12,16 @@ from safa_cmd.tools.comitter.generate import generate_summary
 from safa_cmd.tools.comitter.git_helpers import get_file_content_before, get_staged_diffs, prompt_user_for_staging, show_changes
 from safa_cmd.utils.markdown import list_formatter
 from safa_cmd.utils.menu import prompt_option
+from safa_cmd.utils.printers import print_title
+
+USER_INSTRUCTIONS = """
+This tool will:
+- Show changed files
+- Select files for staging
+- Generate title and change descriptions for staged changes
+- Allow you to edit title and descriptions
+- Commit changes.
+"""
 
 
 def run_committer(config: SafaConfig):
@@ -20,6 +30,8 @@ def run_committer(config: SafaConfig):
     :param config: The configuration of the tool.
     :return:
     """
+    print_title("Committer Tool")
+    print(USER_INSTRUCTIONS)
     project_data = get_safa_project(config)
     artifact_map = create_artifact_name_lookup(project_data["artifacts"])
 
@@ -86,10 +98,12 @@ def get_safa_project(config: SafaConfig):
     :param config: Configuration detailing account details and project.
     :return: The project data.
     """
+    print_title("SAFA Project")
     client_store = SafaStore(config.cache_file_path)
     client = Safa(client_store)
     client.login(config.email, config.password)
     project_data = client.get_project_data(config.version_id)
+    print("Done.\n")
     return project_data
 
 

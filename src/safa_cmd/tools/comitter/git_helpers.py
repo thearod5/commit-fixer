@@ -2,6 +2,8 @@ from typing import Dict
 
 import git
 
+from safa_cmd.utils.printers import print_title
+
 
 def get_staged_diffs(repo: git.Repo) -> Dict[str, str]:
     """
@@ -37,11 +39,16 @@ def get_file_content_before(repo, file_path):
     return content_before
 
 
-def show_changes(repo):
+def show_changes(repo: git.Repo):
+    """
+
+    :param repo:
+    :return:
+    """
+    print_title("Changed Files")
     changed_files = [item.a_path for item in repo.index.diff(None)]
     untracked_files = repo.untracked_files
 
-    print("\nChanged files:")
     for i, file in enumerate(changed_files):
         print(f"{i + 1}. {file}")
 
