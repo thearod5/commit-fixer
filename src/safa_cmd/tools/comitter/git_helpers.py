@@ -1,7 +1,8 @@
-from typing import Dict
+from typing import Dict, List
 
 import git
 
+from safa_cmd.utils.menu import prompt_option
 from safa_cmd.utils.printers import print_title
 
 
@@ -39,48 +40,24 @@ def get_file_content_before(repo, file_path):
     return content_before
 
 
-def show_changes(repo: git.Repo):
+def stage_files(repo: git.Repo) -> List[str]:
     """
+    Displays the files that have been changed to the user and indicates which files are staged and which are not.
+    :param repo: The repository to analyze.
+    :return: List of changed files and untracked files.
+    """
+    print_title("Staged and Unstaged Files")
 
-    :param repo:
-    :return:
-    """
-    print_title("Changed Files")
     changed_files = [item.a_path for item in repo.index.diff(None)]
     untracked_files = repo.untracked_files
+    staged_files = [item.a_path for item in repo.index.diff("HEAD")]
 
-    for i, file in enumerate(changed_files):
-        print(f"{i + 1}. {file}")
+    if len(staged_files) == 0:
+        print("No staged files.")
+    else:
+        print("Staged files:")
+        for i, file in enumerate(staged_files):
+            print(f"{i + 1}. {file}")
 
-    print("\nUntracked files:")
-    for i, file in enumerate(untracked_files):
-        print(f"{len(changed_files) + i + 1}. {file}")
-
-    return changed_files + untracked_files
-
-
-def prompt_user_for_staging(repo, files):
-    to_stage = []
-    while True:
-        user_input = input(
-            "Enter the numbers of the files you want to stage, separated by spaces (or 'a' to stage all, 'q' to quit): ").strip()
-
-        if user_input.lower() == 'a':
-            to_stage = files
-            break
-        elif user_input.lower() == 'q':
-            break
-        else:
-            indices = user_input.split()
-            for index in indices:
-                try:
-                    file_index = int(index) - 1
-                    if file_index >= 0 and file_index < len(files):
-                        to_stage.append(files[file_index])
-                except ValueError:
-                    print(f"Invalid input: {index}")
-
-            if to_stage:
-                break
-    repo.index.add(files)
-    return to_stage
+    to_stage = prompt_option(changed_files, title="Unstaged Files", allow_many=True)
+    repo.index.add(to_stage)

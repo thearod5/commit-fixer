@@ -9,7 +9,7 @@ from safa_cmd.config import SafaConfig
 from safa_cmd.data.artifact_json import ArtifactJson
 from safa_cmd.data.file_change import FileChange
 from safa_cmd.tools.comitter.generate import generate_summary
-from safa_cmd.tools.comitter.git_helpers import get_file_content_before, get_staged_diffs, prompt_user_for_staging, show_changes
+from safa_cmd.tools.comitter.git_helpers import get_file_content_before, get_staged_diffs, stage_files
 from safa_cmd.utils.markdown import list_formatter
 from safa_cmd.utils.menu import prompt_option
 from safa_cmd.utils.printers import print_title
@@ -36,8 +36,7 @@ def run_committer(config: SafaConfig):
     artifact_map = create_artifact_name_lookup(project_data["artifacts"])
 
     repo = git.Repo(config.repo_path)
-    changed_files = show_changes(repo)
-    prompt_user_for_staging(repo, changed_files)
+    stage_files(repo)
     file2diff = get_staged_diffs(repo)
     if len(file2diff) == 0:
         print("No changes staged for commit.")
@@ -98,12 +97,11 @@ def get_safa_project(config: SafaConfig):
     :param config: Configuration detailing account details and project.
     :return: The project data.
     """
-    print_title("SAFA Project")
+    print("...retrieving safa project...")
     client_store = SafaStore(config.cache_file_path)
     client = Safa(client_store)
     client.login(config.email, config.password)
     project_data = client.get_project_data(config.version_id)
-    print("Done.\n")
     return project_data
 
 

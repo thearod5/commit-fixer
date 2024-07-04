@@ -45,7 +45,7 @@ python-dotenv==1.0.1
 PyYAML==6.0.1
 requests==2.32.3
 safa @ file:///Users/albertorodriguez/projects/commit-fixer
-safa-sdk==0.1.1
+safa-sdk==0.1.2
 safa_cmd @ file:///Users/albertorodriguez/projects/commit-fixer
 smmap==5.0.1
 sniffio==1.3.1
