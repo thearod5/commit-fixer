@@ -80,7 +80,7 @@ def run_commit_menu(repo, title, changes):
         if option_num == 0:
             title = input("New Title:")
         elif option_num == 1:
-            change_num = int(input("Change Number"))
+            change_num = int(input("Change ID"))
             changes[change_num - 1] = input("New Change:")
         elif option_num == 2:
             changes.append(input("New Change:"))

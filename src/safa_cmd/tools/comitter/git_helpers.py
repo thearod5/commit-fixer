@@ -32,6 +32,9 @@ def get_staged_diffs(repo: git.Repo) -> Dict[str, str]:
 def get_file_content_before(repo, file_path):
     """
     Get the content of the file before the staged changes.
+    :param repo: The repository that file exists in.
+    :param file_path: The path of the file.
+    :return: The content of the file before the staged changes.
     """
     try:
         content_before = repo.git.show(f'HEAD:{file_path}')
