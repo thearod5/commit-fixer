@@ -57,3 +57,15 @@ class SafaConfig:
         env_content = "\n".join(env_line_items)
         env_file_path = os.path.join(self.repo_path, "safa.env")
         write_file_content(env_file_path, env_content)
+
+    def __repr__(self) -> str:
+        """
+        :return: string representation of the configuration.
+        """
+        config_items = {
+            "Repository": self.repo_path,
+            "Account": self.email,
+            "Version ID": self.version_id
+        }
+        item_display = [f"{k}={v}" for k, v in config_items.items()]
+        return "\n".join(item_display)

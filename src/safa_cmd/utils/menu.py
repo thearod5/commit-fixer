@@ -19,12 +19,11 @@ def input_option(options: List[str], retries=0, max_retries=3, title: str = "Opt
     print(f"\n{title}:")
     for i, option in enumerate(options):
         print(f"{i + 1})", option)
-    print(f"{len(options) + 1} -- Exit")
+    print(f"\n{len(options) + 1}) Exit")
     exit_idx = len(options)
-    print(instructions)
 
     try:
-        option = input(">").lower().strip()
+        option = input(f"{instructions}:").lower().strip()
         if option == str(exit_idx + 1):
             print("Good Bye.")
             sys.exit(0)
@@ -33,7 +32,7 @@ def input_option(options: List[str], retries=0, max_retries=3, title: str = "Opt
                 return options
             else:
                 user_items = [o for o in option.split(",") if len(o) > 0]
-                selected_options = [options[int(item.strip())] for item in user_items]
+                selected_options = [options[int(item.strip()) - 1] for item in user_items]
                 return selected_options
         else:
             option_num = int(option)
@@ -54,3 +53,15 @@ def input_with_default(prompt: str, default_value: Any):
     if user_value.strip() == "":
         return default_value
     return user_value
+
+
+def input_confirm(title: str = "Confirm?", y_option="y", n_option="n"):
+    """
+    Confirms with user.
+    :param title: Title to display to user.
+    :param y_option: Option for positive confirmation.
+    :param n_option: Option for negative confirmation.
+    :return: Whether user confirmed.
+    """
+    user_selection = input(f"{title}({y_option}/{n_option})")
+    return user_selection == y_option
