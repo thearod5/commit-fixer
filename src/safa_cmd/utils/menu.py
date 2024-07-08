@@ -19,7 +19,7 @@ def prompt_option(options: List[str], retries=0, max_retries=3, title: str = "Op
     print(f"\n{title}:")
     for i, option in enumerate(options):
         print(f"{i + 1})", option)
-    print(f"{len(options)}: Exit")
+    print(f"{len(options)+1}) Exit")
     exit_idx = len(options)
     print(instructions)
 
