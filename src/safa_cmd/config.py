@@ -27,7 +27,7 @@ class SafaConfig:
         password = os.environ["SAFA_PASSWORD"]
         version_id = os.environ["SAFA_VERSION_ID"]
         cache_file_path = os.environ["CACHE_FILE_PATH"]
-        return SafaConfig(repo_path=repo_path,
+        return SafaConfig(repo_path=os.path.expanduser(repo_path),
                           email=email,
                           password=password,
                           version_id=version_id,

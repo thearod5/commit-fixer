@@ -1,6 +1,6 @@
 [project]
 name = "safa-cmd"
-version = "0.0.5"
+version = "0.0.6"
 description = "A command line tool for running SAFA in the command line."
 authors = [
     { name = "Alberto Rodriguez", email = "alberto@safa.ai.com" }
@@ -55,7 +55,7 @@ dependencies = [
     "python-dotenv==1.0.1",
     "PyYAML==6.0.1",
     "requests==2.32.3",
-    "safa-sdk==0.1.2",
+    "safa-sdk",
     "smmap==5.0.1",
     "sniffio==1.3.1",
     "SQLAlchemy==2.0.31",

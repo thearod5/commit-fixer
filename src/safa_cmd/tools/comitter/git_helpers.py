@@ -52,7 +52,6 @@ def stage_files(repo: git.Repo) -> List[str]:
     print_title("Staged and Unstaged Files")
 
     changed_files = [item.a_path for item in repo.index.diff(None)]
-    untracked_files = repo.untracked_files
     staged_files = [item.a_path for item in repo.index.diff("HEAD")]
 
     if len(staged_files) == 0:

@@ -1,8 +1,9 @@
+import os.path
 import sys
 from typing import Dict, List
 
 import git
-from safa_sdk.safa_client import Safa
+from safa_sdk.safa_client import SafaClient
 from safa_sdk.safa_store import SafaStore
 
 from safa_cmd.config import SafaConfig
@@ -40,7 +41,7 @@ def run_committer(config: SafaConfig):
     file2diff = get_staged_diffs(repo)
     if len(file2diff) == 0:
         print("No changes staged for commit.")
-        sys.exit(0)
+        return
 
     changes = create_file_changes(file2diff, artifact_map, repo)
     title, changes = generate_summary(changes, project_data["specification"])
@@ -101,10 +102,11 @@ def get_safa_project(config: SafaConfig):
     :return: The project data.
     """
     print("...retrieving safa project...")
-    client_store = SafaStore(config.cache_file_path)
-    client = Safa(client_store)
+    if not os.path.exists(config.cache_file_path):
+        raise Exception(f"Config file does not exist: {config.cache_file_path}")
+    client = SafaClient()
     client.login(config.email, config.password)
-    project_data = client.get_project_data(config.version_id)
+    project_data = client.get_version(config.version_id)
     return project_data
 
 
