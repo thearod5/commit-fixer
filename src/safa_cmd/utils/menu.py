@@ -2,7 +2,7 @@ import sys
 from typing import Any, List
 
 
-def prompt_option(options: List[str], retries=0, max_retries=3, title: str = "Options", allow_many: bool = False):
+def input_option(options: List[str], retries=0, max_retries=3, title: str = "Options", allow_many: bool = False):
     """
     Prompts user to select an option.
     :param options: List of options.
@@ -19,7 +19,7 @@ def prompt_option(options: List[str], retries=0, max_retries=3, title: str = "Op
     print(f"\n{title}:")
     for i, option in enumerate(options):
         print(f"{i + 1})", option)
-    print(f"{len(options)+1}) Exit")
+    print(f"{len(options) + 1} -- Exit")
     exit_idx = len(options)
     print(instructions)
 
@@ -40,7 +40,7 @@ def prompt_option(options: List[str], retries=0, max_retries=3, title: str = "Op
             return options[option_num - 1]
     except Exception as e:
         print(e)
-        return prompt_option(options, retries=retries + 1)
+        return input_option(options, retries=retries + 1)
 
 
 def input_with_default(prompt: str, default_value: Any):

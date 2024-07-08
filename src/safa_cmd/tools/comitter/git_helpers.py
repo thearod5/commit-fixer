@@ -2,7 +2,7 @@ from typing import Dict, List
 
 import git
 
-from safa_cmd.utils.menu import prompt_option
+from safa_cmd.utils.menu import input_option
 from safa_cmd.utils.printers import print_title
 
 
@@ -61,5 +61,5 @@ def stage_files(repo: git.Repo) -> List[str]:
         for i, file in enumerate(staged_files):
             print(f"{i + 1}. {file}")
 
-    to_stage = prompt_option(changed_files, title="Unstaged Files", allow_many=True)
+    to_stage = input_option(changed_files, title="Unstaged Files", allow_many=True)
     repo.index.add(to_stage)

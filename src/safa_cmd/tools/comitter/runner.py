@@ -1,10 +1,7 @@
-import os.path
-import sys
 from typing import Dict, List
 
 import git
 from safa_sdk.safa_client import SafaClient
-from safa_sdk.safa_store import SafaStore
 
 from safa_cmd.config import SafaConfig
 from safa_cmd.data.artifact_json import ArtifactJson
@@ -12,17 +9,8 @@ from safa_cmd.data.file_change import FileChange
 from safa_cmd.tools.comitter.generate import generate_summary
 from safa_cmd.tools.comitter.git_helpers import get_file_content_before, get_staged_diffs, stage_files
 from safa_cmd.utils.markdown import list_formatter
-from safa_cmd.utils.menu import prompt_option
+from safa_cmd.utils.menu import input_option
 from safa_cmd.utils.printers import print_title
-
-USER_INSTRUCTIONS = """
-This tool will:
-- Show changed files
-- Select files for staging
-- Generate title and change descriptions for staged changes
-- Allow you to edit title and descriptions
-- Commit changes.
-"""
 
 
 def run_committer(config: SafaConfig):
@@ -32,7 +20,6 @@ def run_committer(config: SafaConfig):
     :return:
     """
     print_title("Committer Tool")
-    print(USER_INSTRUCTIONS)
     project_data = get_safa_project(config)
     artifact_map = create_artifact_name_lookup(project_data["artifacts"])
 
@@ -75,7 +62,7 @@ def run_commit_menu(repo, title, changes):
     running = True
     while running:
         print_commit_message(title, changes, format_type="numbered")
-        selected_option = prompt_option(menu_options)
+        selected_option = input_option(menu_options)
         option_num = menu_options.index(selected_option)
 
         if option_num == 0:
@@ -102,11 +89,10 @@ def get_safa_project(config: SafaConfig):
     :return: The project data.
     """
     print("...retrieving safa project...")
-    if not os.path.exists(config.cache_file_path):
-        raise Exception(f"Config file does not exist: {config.cache_file_path}")
     client = SafaClient()
     client.login(config.email, config.password)
     project_data = client.get_version(config.version_id)
+    print("Project Name: ", project_data["name"])
     return project_data
 
 
