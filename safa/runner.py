@@ -8,16 +8,17 @@ from safa.api.http_client import HttpClient
 from safa.api.safa_client import SafaClient
 from safa.api.safa_store import SafaStore
 from safa.tools.search import run_search
-from safa.utils.fs import clean_path
+from safa.utils.fs import clean_path, write_json
 from safa.utils.printers import print_title
 
-SRC_PATH = os.path.abspath(os.path.dirname(__file__))
+SRC_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+print("SRS", SRC_PATH)
 sys.path.append(SRC_PATH)
 
-from safa.tools.projects import run_projects
+from safa.tools.projects import run_project_management
 from safa.safa_config import SafaConfig
 from safa.tools.committer import run_committer
-from safa.tools.configure import configure_account, configure_project
+from safa.tools.configure import run_configure_account, run_configure_project
 from safa.utils.menu import input_confirm, input_option
 
 safa_banner = (
@@ -47,9 +48,9 @@ ToolType = Callable[[SafaConfig, SafaClient], None]
 TOOLS: Dict[str, Tuple[ToolType, List[str]]] = {
     "Commit": (run_committer, ["project"]),
     "Search": (run_search, ["project"]),
-    "Manage Projects": (run_projects, ["project"]),
-    "Configure Project": (configure_project, ["user"]),
-    "Configure Account": (configure_account, ["*"]),  # type: ignore
+    "Manage Projects": (run_project_management, ["project"]),
+    "Configure Project": (run_configure_project, ["user"]),
+    "Configure Account": (run_configure_account, ["*"]),  # type: ignore
 }
 
 tool2group = {
@@ -89,14 +90,19 @@ def main() -> None:
         tool_func(config, client)
 
 
-def create_safa_client(config):
+def create_safa_client(config: SafaConfig) -> SafaClient:
+    """
+    Creates SAFA client pointing at safa api. Can be overridden with BASE_URL.
+    :param config: SAFA account and project configuration.
+    :return: Safa Client created.
+    """
     base_url = os.environ.get("BASE_URL", "https://api.safa.ai")
     http_client = HttpClient(base_url, global_parameters={"verify": False})
     store = SafaStore(cache_file_path=config.cache_file_path)
     client = SafaClient(store, http_client=http_client)
     if config.email is None:
         print("Account email was not found.")
-        configure_account(config)
+        run_configure_account(config)
     client.login(config.email, config.password)
     return client
 
@@ -129,13 +135,15 @@ def configure(config: SafaConfig) -> SafaClient:
         print("Okay :)")
         sys.exit(-1)
 
+    write_json(config.cache_file_path, {})
+
     print_title("Account Configuration", factor=0.5)
-    configure_account(config)
+    run_configure_account(config)
 
     client = create_safa_client(config)
 
     print_title("Project Configuration")
-    configure_project(config, client)
+    run_configure_project(config, client)
 
     print("Configuration Finished.")
     return client

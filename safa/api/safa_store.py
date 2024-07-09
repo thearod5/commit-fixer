@@ -39,6 +39,7 @@ class SafaStore:
         :param entity_id: The ID of the entity.
         :return: The entity.
         """
+        print(f"...store retrieved {entity_type}...")
         return self.project_data[entity_type][entity_id]
 
     def save(self, entity_type: str, entity_id: str, entity_data: Dict) -> None:
@@ -51,6 +52,19 @@ class SafaStore:
         """
         self.__has_entity_type(entity_type, assert_has=True)
         self.project_data[entity_type][entity_id] = entity_data
+        self.__write_to_disk()
+
+    def delete(self, entity_type: str, entity_id: str) -> None:
+        """
+        Deletes data associated to entity.
+        :param entity_type: Type of entity.
+        :param entity_id: ID of entity.
+        :return: None
+        """
+        self.__has_entity_type(entity_type, assert_has=True)
+        if entity_id not in self.project_data[entity_type]:
+            return
+        del self.project_data[entity_type][entity_id]
         self.__write_to_disk()
 
     def __write_to_disk(self) -> None:

@@ -104,4 +104,7 @@ def input_confirm(title: str = "Confirm?", y_option="y", n_option="n", default_v
             return default_value
         else:
             return input_confirm(title=title, y_option=y_option, n_option=n_option, default_value=default_value)
+    else:
+        if user_selection not in [y_option, n_option]:
+            return input_confirm(title=title, y_option=y_option, n_option=n_option, default_value=default_value)
     return y_option in user_selection

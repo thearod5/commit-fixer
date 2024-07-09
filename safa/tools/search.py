@@ -36,10 +36,11 @@ def run_search(config: SafaConfig, client: SafaClient):
         if query == 'exit':
             return
 
-        docs = db.similarity_search(query, k=3)
+        docs = db.similarity_search_with_score(query, k=3)
 
         print_title("Results")
-        results = [f"{d.metadata['name']}\n\t{d.page_content.split('.')[0]}" for d in docs]
+        results = [f"{d.metadata['name']}\n\t{d.page_content.split('.')[0]}" for d, score in docs if
+                   score > .1 and len(d.page_content) > 0]
         print(list_formatter(results), "\n")
 
 

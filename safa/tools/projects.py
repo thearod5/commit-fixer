@@ -1,6 +1,7 @@
 import os
 from typing import Dict, List, Optional
 
+from safa.api.constants import STORE_PROJECT_KEY
 from safa.api.safa_client import SafaClient
 from safa.safa_config import SafaConfig
 from safa.utils.fs import list_paths, list_python_files, read_file
@@ -8,16 +9,17 @@ from safa.utils.menu import input_option
 from safa.utils.printers import print_title
 
 
-def run_projects(config: SafaConfig, client: SafaClient) -> None:
+def run_project_management(config: SafaConfig, client: SafaClient) -> None:
     """
     Allows user to create, delete, or list projects.
     :param config: Account and repository configuration.
     :param client: Client used to access SAFA API.
     :return: None
     """
-    selected_option = input_option(["create_project", "delete_project", "list_projects"])
-
-    if selected_option == "create_project":
+    selected_option = input_option(["refresh_project", "create_project", "delete_project", "list_projects"])
+    if selected_option == "refresh_project":
+        refresh_project(config, client)
+    elif selected_option == "create_project":
         create_new_project(config, client)
     elif selected_option == "delete_project":
         delete_project(client)
@@ -25,6 +27,18 @@ def run_projects(config: SafaConfig, client: SafaClient) -> None:
         list_projects(client)
     else:
         raise Exception(f"Invalid option: {selected_option}")
+
+
+def refresh_project(config: SafaConfig, client: SafaClient) -> None:
+    """
+    Refresh project data.
+    :param config: SAFA account and project configuration.
+    :param client: Client used to access SAFA API.
+    :return: None
+    """
+    version_id = config.get_version_id()
+    client.store.delete(STORE_PROJECT_KEY, version_id)
+    client.get_version(version_id)
 
 
 def create_new_project(config: SafaConfig, client: SafaClient) -> None:

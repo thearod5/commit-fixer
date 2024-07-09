@@ -6,7 +6,7 @@ from safa.tools.projects import create_new_project
 from safa.utils.menu import input_confirm, input_option
 
 
-def configure_account(config: SafaConfig, *args) -> None:
+def run_configure_account(config: SafaConfig, *args) -> None:
     """
     Configures account email and password.
     :param config: Configuration used to set account details in.
@@ -54,7 +54,7 @@ def run_config_tool(config: SafaConfig, client: SafaClient):
     entity_type = input_option(["account", "project", "back"])
 
     if entity_type == "account":
-        configure_account(config)
+        run_configure_account(config)
     elif entity_type == "project":
         project_setup_type = input_option(["create_new", "select_existing"], title="How do you want to setup your project?")
         if project_setup_type == "create_new":
@@ -72,7 +72,7 @@ def run_config_tool(config: SafaConfig, client: SafaClient):
     return run_config_tool(config, client)
 
 
-def configure_project(config: SafaConfig, client: SafaClient, title: str = "How do you want to setup your project?") -> None:
+def run_configure_project(config: SafaConfig, client: SafaClient, title: str = "How do you want to setup your project?") -> None:
     """
     Configures a SAFA project for current repository.
     :param config: SAFA account and project configuration.

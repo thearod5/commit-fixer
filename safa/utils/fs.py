@@ -14,6 +14,16 @@ def write_file_content(file_path: str, file_content: str) -> None:
         f.write(file_content)
 
 
+def write_json(file_path: str, json_dict: Dict) -> None:
+    """
+    Writes dict as JSON to file.
+    :param file_path: Path to file.
+    :param json_dict: Object to write.
+    :return: None
+    """
+    write_file_content(file_path, json.dumps(json_dict))
+
+
 def list_python_files(directory_paths: Union[List[str], str]):
     """
     Returns a list of Python file paths contained within the given directory.

@@ -9,6 +9,7 @@ from safa.utils.fs import clean_path, write_file_content
 CONFIG_FOLDER = ".safa"
 ENV_FILE = ".env"
 CHROMA_FOLDER = "vector_store"
+CACHE_FILE = ".cache"
 
 
 @dataclass
@@ -25,11 +26,11 @@ class SafaConfig:
     config_path: str
     env_file_path: str
     vector_store_path: str
+    cache_file_path: str
     # user defined
     email: Optional[str]
     password: Optional[str]
     version_id: Optional[str]
-    cache_file_path: Optional[str]
 
     @staticmethod
     def from_repo(repo_path: str, root_env_file_path: Optional[str] = None):
@@ -37,6 +38,7 @@ class SafaConfig:
         config_path = os.path.join(repo_path, CONFIG_FOLDER)
         env_file_path = os.path.join(config_path, ENV_FILE)
         vector_store_path = os.path.join(config_path, CHROMA_FOLDER)
+        cache_file_path = os.path.join(config_path, CACHE_FILE)
 
         if os.path.exists(env_file_path):
             load_dotenv(env_file_path)
@@ -52,10 +54,7 @@ class SafaConfig:
         email = os.environ.get("SAFA_EMAIL")
         password = os.environ.get("SAFA_PASSWORD")
         version_id = os.environ.get("SAFA_VERSION_ID")
-        cache_file_path = os.environ.get("SAFA_CACHE_FILE_PATH")
 
-        if cache_file_path:
-            cache_file_path = clean_path(cache_file_path)
         return SafaConfig(repo_path=repo_path,
                           config_path=config_path,
                           env_file_path=env_file_path,
@@ -86,7 +85,13 @@ class SafaConfig:
         print(f"Configuration file written to {self.env_file_path}")
 
     def is_configured(self) -> bool:
-        return self.env_file_path and os.path.exists(self.env_file_path) and self.email and self.password and self.version_id
+        return (
+                os.path.exists(self.env_file_path) and
+                os.path.exists(self.cache_file_path) and
+                self.email and
+                self.password and
+                self.version_id
+        )
 
     def get_version_id(self) -> str:
         """
