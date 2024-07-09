@@ -1,0 +1,4 @@
+mypy-extensions==1.0.0
+mypy==1.10.1
+responses~=0.25.3
+safa-cmd
