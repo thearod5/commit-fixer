@@ -65,6 +65,7 @@ def run_commit_menu(repo: git.Repo, title: str, changes: List[str]) -> None:
     :param changes: The current changes to the commit.
     :return: None
     """
+    print_title("Commit Menu")
     menu_options = ["Edit Title", "Edit Change", "Remove Change", "Add Change", "Commit"]
     running = True
     while running:

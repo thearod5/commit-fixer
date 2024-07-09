@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Dict, List, Tuple, cast
+from typing import Any, Dict, List, Tuple, Union, cast
 
 
 def write_file_content(file_path: str, file_content: str) -> None:
@@ -14,7 +14,7 @@ def write_file_content(file_path: str, file_content: str) -> None:
         f.write(file_content)
 
 
-def list_python_files(directory_paths: str | List[str]):
+def list_python_files(directory_paths: Union[List[str], str]):
     """
     Returns a list of Python file paths contained within the given directory.
 

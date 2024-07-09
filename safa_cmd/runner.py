@@ -52,6 +52,11 @@ TOOLS: Dict[str, Tuple[ToolType, List[str]]] = {
     "Configure Account": (configure_account, ["*"]),  # type: ignore
 }
 
+tool2group = {
+    "Tool": ["Commit", "Search"],
+    "Setting": ["Manage Projects", "Configure Project", "Configure Account"]
+}
+
 
 def main() -> None:
     """
@@ -79,7 +84,7 @@ def main() -> None:
     while running:
         filtered_tools = filter_tools_by_permissions(TOOLS, config_permissions)
         menu_keys = list(filtered_tools.keys())
-        option_selected = input_option(menu_keys, title="Tools")
+        option_selected = input_option(menu_keys, title="Tools", group2items=tool2group)
         tool_func, tool_permissions = TOOLS[option_selected]
         tool_func(config, client)
 
