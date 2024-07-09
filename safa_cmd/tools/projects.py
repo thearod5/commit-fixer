@@ -60,6 +60,7 @@ def create_new_project(config: SafaConfig, client: SafaClient) -> None:
     print("...(3) starting summary job...")
     client.summarize(version_id, )
     print("Job has been submitted! You will get an email when its done.")
+    config.to_env()
 
 
 def delete_project(client: SafaClient) -> None:

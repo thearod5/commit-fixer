@@ -6,7 +6,7 @@ from safa_cmd.tools.projects import create_new_project
 from safa_cmd.utils.menu import input_confirm, input_option
 
 
-def configure_account(config: SafaConfig) -> None:
+def configure_account(config: SafaConfig, *args) -> None:
     """
     Configures account email and password.
     :param config: Configuration used to set account details in.
@@ -21,6 +21,8 @@ def configure_account(config: SafaConfig) -> None:
     else:
         print("Safa account password is set.")
 
+    config.to_env()
+
 
 def configure_existing_project(config: SafaConfig, client: SafaClient) -> None:
     """
@@ -29,8 +31,6 @@ def configure_existing_project(config: SafaConfig, client: SafaClient) -> None:
     :param client: Client used to access SAFA API.
     :return: None
     """
-    client.login(config.email, config.password)
-
     if config.version_id is None:
         project_lookup_map = {p["name"]: p for p in client.get_projects()}
         selected_project_name = input_option(list(project_lookup_map.keys()))
@@ -47,6 +47,7 @@ def configure_existing_project(config: SafaConfig, client: SafaClient) -> None:
             config.version_id = None
             return configure_existing_project(config, client)
     print("Project version successfully configured.")
+    config.to_env()
 
 
 def run_config_tool(config: SafaConfig, client: SafaClient):
@@ -67,6 +68,22 @@ def run_config_tool(config: SafaConfig, client: SafaClient):
     else:
         raise Exception(f"Invalid entity type: {entity_type}")
 
-    config.to_env()
     print("Configure Updated.")
     return run_config_tool(config, client)
+
+
+def configure_project(config: SafaConfig, client: SafaClient, title: str = "How do you want to setup your project?") -> None:
+    """
+    Configures a SAFA project for current repository.
+    :param config: SAFA account and project configuration.
+    :param client: Client used to access SAFA API.
+    :param title: Prompt to user to select creating a new project or selecting an existing one.
+    :return: None
+    """
+    project_setup_type = input_option(["create_new", "select_existing"], title=title)
+    if project_setup_type == "create_new":
+        create_new_project(config, client)
+    elif project_setup_type == "select_existing":
+        configure_existing_project(config, client)
+    else:
+        raise Exception("Unknown project option:" + project_setup_type)

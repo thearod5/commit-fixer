@@ -29,6 +29,9 @@ def input_option(options: List[str], retries=0, max_retries=3, title: str = "Opt
     print(f"{len(options) + 1}) Exit")
     exit_idx = len(options)
 
+    if not allow_many and len(options) == 1:
+        return options[0]
+
     try:
         option = input(f"\nSelection:").lower().strip()
         if option == str(exit_idx + 1):
@@ -70,5 +73,5 @@ def input_confirm(title: str = "Confirm?", y_option="y", n_option="n"):
     :param n_option: Option for negative confirmation.
     :return: Whether user confirmed.
     """
-    user_selection = input(f"{title}({y_option}/{n_option})")
+    user_selection = input(f"{title} ({y_option}/{n_option})")
     return user_selection == y_option

@@ -8,6 +8,7 @@ from safa.safa_client import SafaClient
 from safa_cmd.safa.http_client import HttpClient
 from safa_cmd.safa.safa_store import SafaStore
 from safa_cmd.tools.search import run_search
+from safa_cmd.utils.fs import clean_path
 from safa_cmd.utils.printers import print_title
 
 SRC_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -16,8 +17,8 @@ sys.path.append(SRC_PATH)
 from safa_cmd.tools.projects import run_projects
 from safa_cmd.config import SafaConfig
 from safa_cmd.tools.committer import run_committer
-from safa_cmd.tools.configure import run_config_tool
-from safa_cmd.utils.menu import input_option
+from safa_cmd.tools.configure import configure_account, configure_project
+from safa_cmd.utils.menu import input_confirm, input_option
 
 safa_banner = (
     """
@@ -28,6 +29,7 @@ safa_banner = (
 ███████║██║  ██║██║     ██║  ██║    ██╗    ██║  ██║██║
 ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝    ╚═╝    ╚═╝  ╚═╝╚═╝                        
         Making your documentation work for you.
+                  https://safa.ai
     """
 )
 usage_msg = (
@@ -38,15 +40,16 @@ usage_msg = (
     1. Create safa.env file at inferred repository path
         `SAFA_REPO_PATH=...`
     2. Pass repo path as arguments to SAFA command like so:
-        ```Usage: $ safa [REPO_PATH]```
+        ```Usage: $ safa [REPO_PATH] [ENV_FILE_PATH]```
     """
 )
 ToolType = Callable[[SafaConfig, SafaClient], None]
 TOOLS: Dict[str, Tuple[ToolType, List[str]]] = {
-    "Commit": (run_committer, ["*"]),
-    "Setup": (run_config_tool, ["*"]),
-    "Projects": (run_projects, ["user", "project"]),
-    "Search": (run_search, ["user", "project"])
+    "Commit": (run_committer, ["project"]),
+    "Search": (run_search, ["project"]),
+    "Manage Projects": (run_projects, ["project"]),
+    "Configure Project": (configure_project, ["user"]),
+    "Configure Account": (configure_account, ["*"]),  # type: ignore
 }
 
 
@@ -55,16 +58,18 @@ def main() -> None:
     Allows users to run tools.
     :return: None
     """
-    repo_path = configure_repo_path()
-    config: SafaConfig = SafaConfig.from_env(repo_path)
+    print("\n", safa_banner.strip())
 
-    http_client = HttpClient("https://localhost:3000", global_parameters={"verify": False})
-    store = SafaStore(cache_file_path=config.cache_file_path)
-    client = SafaClient(store, http_client=http_client)
-    client.login(config.email, config.password)
+    repo_path = clean_path(sys.argv[1]) if len(sys.argv) >= 2 else os.path.abspath("")
+    env_file_path = sys.argv[2] if len(sys.argv) >= 3 else None
+    config = SafaConfig.from_repo(repo_path, env_file_path)
+
+    if config.is_configured():
+        client = create_safa_client(config)
+    else:
+        client = configure(config)
     print("User successfully logged in.")
 
-    print("\n", safa_banner.strip())
     print_title("Configuration")
     print(config)
 
@@ -79,13 +84,65 @@ def main() -> None:
         tool_func(config, client)
 
 
+def create_safa_client(config):
+    base_url = os.environ.get("BASE_URL", "https://api.safa.ai")
+    http_client = HttpClient(base_url, global_parameters={"verify": False})
+    store = SafaStore(cache_file_path=config.cache_file_path)
+    client = SafaClient(store, http_client=http_client)
+    if config.email is None:
+        print("Account email was not found.")
+        configure_account(config)
+    client.login(config.email, config.password)
+    return client
+
+
+configure_message_template = (
+    """
+To configure your SAFA project, we are going to create the following
+
+.safa
+    /.env: Contains ENV variables linking your account and project.
+    /chroma: Creates vector store to easily conduct search.
+    """
+)
+
+
+def configure(config: SafaConfig) -> SafaClient:
+    print(f"\nRepository Root: {config.repo_path}\n")
+    if not os.path.isdir(config.config_path):
+        if input_confirm("Is this the root of your repository?"):
+            os.makedirs(config.config_path, exist_ok=True)
+        else:
+            print(usage_msg)
+            sys.exit(-1)
+
+    configure_message = configure_message_template.format(config.repo_path)
+    print_title("Welcome to your new project.")
+    print(configure_message)
+
+    if not input_confirm("Do you want to continue configuration?"):
+        print("Okay :)")
+        sys.exit(-1)
+
+    print_title("Account Configuration", factor=0.5)
+    configure_account(config)
+
+    client = create_safa_client(config)
+
+    print_title("Project Configuration")
+    configure_project(config, client)
+
+    print("Configuration Finished.")
+    return client
+
+
 def configure_repo_path() -> str:
     """
     Extracts the repository path from env or from arguments.
     :return: Repository path.
     """
     repo_path = os.path.expanduser(sys.argv[1]) if len(sys.argv) == 2 else os.path.abspath("")
-    env_file_path = os.path.join(repo_path, "safa.env")
+    env_file_path = os.path.join(repo_path, ".safa")
     if not os.path.exists(env_file_path):
         print("Inferred Repository Path:", repo_path, "\n")
         print(usage_msg.strip())
