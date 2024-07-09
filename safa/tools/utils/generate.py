@@ -1,8 +1,8 @@
 import json
 from typing import Dict, List
 
-from safa_cmd.data.file_change import FileChange
-from safa_cmd.utils.llm_manager import get_llm_manager
+from safa.data.file_change import FileChange
+from safa.utils.llm_manager import get_llm_manager
 
 SUMMARIZE_INSTRUCTIONS = """
 You are a AI agent working on a software project to help users document their development practices.

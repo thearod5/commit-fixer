@@ -4,7 +4,7 @@ from typing import Optional
 
 from dotenv import load_dotenv
 
-from safa_cmd.utils.fs import clean_path, write_file_content
+from safa.utils.fs import clean_path, write_file_content
 
 CONFIG_FOLDER = ".safa"
 ENV_FILE = ".env"
@@ -32,7 +32,7 @@ class SafaConfig:
     cache_file_path: Optional[str]
 
     @staticmethod
-    def from_repo(repo_path: str, root_env_file_path: str = None):
+    def from_repo(repo_path: str, root_env_file_path: Optional[str] = None):
         repo_path = clean_path(repo_path)
         config_path = os.path.join(repo_path, CONFIG_FOLDER)
         env_file_path = os.path.join(config_path, ENV_FILE)

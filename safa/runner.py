@@ -4,21 +4,21 @@ from typing import Callable, Dict, List, Tuple
 
 from dotenv import load_dotenv
 
-from safa.safa_client import SafaClient
-from safa_cmd.safa.http_client import HttpClient
-from safa_cmd.safa.safa_store import SafaStore
-from safa_cmd.tools.search import run_search
-from safa_cmd.utils.fs import clean_path
-from safa_cmd.utils.printers import print_title
+from safa.api.http_client import HttpClient
+from safa.api.safa_client import SafaClient
+from safa.api.safa_store import SafaStore
+from safa.tools.search import run_search
+from safa.utils.fs import clean_path
+from safa.utils.printers import print_title
 
 SRC_PATH = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(SRC_PATH)
 
-from safa_cmd.tools.projects import run_projects
-from safa_cmd.config import SafaConfig
-from safa_cmd.tools.committer import run_committer
-from safa_cmd.tools.configure import configure_account, configure_project
-from safa_cmd.utils.menu import input_confirm, input_option
+from safa.tools.projects import run_projects
+from safa.safa_config import SafaConfig
+from safa.tools.committer import run_committer
+from safa.tools.configure import configure_account, configure_project
+from safa.utils.menu import input_confirm, input_option
 
 safa_banner = (
     """
@@ -67,7 +67,7 @@ def main() -> None:
 
     repo_path = clean_path(sys.argv[1]) if len(sys.argv) >= 2 else os.path.abspath("")
     env_file_path = sys.argv[2] if len(sys.argv) >= 3 else None
-    config = SafaConfig.from_repo(repo_path, env_file_path)
+    config = SafaConfig.from_repo(repo_path, root_env_file_path=env_file_path)
 
     if config.is_configured():
         client = create_safa_client(config)
@@ -105,9 +105,9 @@ configure_message_template = (
     """
 To configure your SAFA project, we are going to create the following
 
-.safa
-    /.env: Contains ENV variables linking your account and project.
-    /chroma: Creates vector store to easily conduct search.
+- .safa/.env: Contains ENV variables linking your account and project.
+- .safa/.cache: Cached search results for improved performance.
+- .safa/chroma: Creates vector store to easily conduct search.
     """
 )
 

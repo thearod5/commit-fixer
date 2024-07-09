@@ -1,8 +1,8 @@
 import json
 from typing import Any, Dict, Optional
 
-from safa_cmd.safa.constants import STORE_ENTITIES
-from safa_cmd.utils.fs import read_json_file
+from safa.api.constants import STORE_ENTITIES
+from safa.utils.fs import read_json_file
 
 ProjectData = Dict
 

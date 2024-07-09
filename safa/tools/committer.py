@@ -2,15 +2,15 @@ from typing import Dict, List
 
 import git
 
-from safa_cmd.config import SafaConfig
-from safa_cmd.data.artifact_json import ArtifactJson
-from safa_cmd.data.file_change import FileChange
-from safa_cmd.safa.safa_client import SafaClient
-from safa_cmd.tools.utils.generate import generate_summary
-from safa_cmd.tools.utils.git_helpers import get_file_content_before, get_staged_diffs, stage_files
-from safa_cmd.utils.markdown import list_formatter
-from safa_cmd.utils.menu import input_option
-from safa_cmd.utils.printers import print_title
+from safa.api.safa_client import SafaClient
+from safa.data.artifact_json import ArtifactJson
+from safa.data.file_change import FileChange
+from safa.safa_config import SafaConfig
+from safa.tools.utils.generate import generate_summary
+from safa.tools.utils.git_helpers import get_file_content_before, get_staged_diffs, stage_files
+from safa.utils.markdown import list_formatter
+from safa.utils.menu import input_option
+from safa.utils.printers import print_title
 
 
 def run_committer(config: SafaConfig, client: SafaClient):

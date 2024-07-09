@@ -6,8 +6,8 @@ from unittest import TestCase
 import responses
 from requests import PreparedRequest
 
-from safa_sdk.constants import SAFA_AUTH_TOKEN
-from safa_sdk.safa_client import SafaClient
+from safa.api.constants import SAFA_AUTH_TOKEN
+from safa.api.safa_client import SafaClient
 
 DEFAULT_AUTH_TOKEN = "auth_token"
 
@@ -118,4 +118,4 @@ class Mocker:
         :return: None
         """
         cookies = request.headers.get('Cookie', '')
-        tc.assertIn(f"{SAFA_AUTH_TOKEN}=auth_token", cookies)
+        tc.assertIn(f"{SAFA_AUTH_TOKEN}=auth_token", cookies, msg="Cookies did not contain SAFA token.")

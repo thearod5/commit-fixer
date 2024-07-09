@@ -1,11 +1,11 @@
 import os
 from typing import Dict, List, Optional
 
-from safa_cmd.config import SafaConfig
-from safa_cmd.safa.safa_client import SafaClient
-from safa_cmd.utils.fs import list_paths, list_python_files, read_file
-from safa_cmd.utils.menu import input_option
-from safa_cmd.utils.printers import print_title
+from safa.api.safa_client import SafaClient
+from safa.safa_config import SafaConfig
+from safa.utils.fs import list_paths, list_python_files, read_file
+from safa.utils.menu import input_option
+from safa.utils.printers import print_title
 
 
 def run_projects(config: SafaConfig, client: SafaClient) -> None:

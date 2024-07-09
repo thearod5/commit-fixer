@@ -1,11 +1,11 @@
 import sys
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from safa_cmd.utils.printers import print_bar, print_title
+from safa.utils.printers import print_bar, print_title
 
 
 def input_option(options: List[str], retries=0, max_retries=3, title: str = "Options", allow_many: bool = False,
-                 group2items: Dict[str, str] = None):
+                 group2items: Optional[Dict[str, str]] = None):
     """
     Prompts user to select an option.
     :param options: List of options.
@@ -29,7 +29,7 @@ def input_option(options: List[str], retries=0, max_retries=3, title: str = "Opt
     try:
         option = input(f"\n{instructions}:").lower().strip()
         if option == str(exit_idx + 1):
-            print("Good Bye.")
+            print("Good Bye :)")
             sys.exit(0)
         if allow_many:
             if option == "a":
@@ -88,13 +88,20 @@ def input_with_default(prompt: str, default_value: Any):
     return user_value
 
 
-def input_confirm(title: str = "Confirm?", y_option="y", n_option="n"):
+def input_confirm(title: str = "Confirm?", y_option="y", n_option="n", default_value: Optional[str] = None):
     """
     Confirms with user.
     :param title: Title to display to user.
     :param y_option: Option for positive confirmation.
     :param n_option: Option for negative confirmation.
+    :param default_value: Value to used if user returns empty response.
     :return: Whether user confirmed.
     """
-    user_selection = input(f"{title} ({y_option}/{n_option})")
-    return user_selection == y_option
+    label = f"{title} ({y_option}/{n_option} or {default_value} if empty)" if default_value else f"{title} ({y_option}/{n_option})"
+    user_selection = input(label)
+    if user_selection == "":
+        if default_value:
+            return default_value
+        else:
+            return input_confirm(title=title, y_option=y_option, n_option=n_option, default_value=default_value)
+    return y_option in user_selection

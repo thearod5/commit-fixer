@@ -5,10 +5,11 @@ from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 
-from safa_cmd.config import SafaConfig
-from safa_cmd.safa.safa_client import SafaClient
-from safa_cmd.utils.menu import input_confirm
-from safa_cmd.utils.printers import print_title
+from safa.api.safa_client import SafaClient
+from safa.safa_config import SafaConfig
+from safa.utils.markdown import list_formatter
+from safa.utils.menu import input_confirm
+from safa.utils.printers import print_title
 
 
 def run_search(config: SafaConfig, client: SafaClient):
@@ -22,12 +23,12 @@ def run_search(config: SafaConfig, client: SafaClient):
     version_id = config.get_version_id()
     project_data = client.get_version(version_id)
 
-    if os.path.isdir(config.vector_store_path) and input_confirm("Reload previous vector store?"):
+    if os.path.isdir(config.vector_store_path) and input_confirm("Reload previous vector store?", default_value="y"):
         print("...reloading vector store...")
         db = Chroma(embedding_function=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2"),
                     persist_directory=config.vector_store_path)
     else:
-        print("...create new vector store...")
+        print("...create vector store...")
         db = build_vector_store(project_data["artifacts"], vector_store_path=config.vector_store_path)
         db.persist()
     while True:
@@ -37,9 +38,9 @@ def run_search(config: SafaConfig, client: SafaClient):
 
         docs = db.similarity_search(query, k=3)
 
-        for doc in docs:
-            print_title(doc.metadata["name"], factor=0.25)
-            print(doc.page_content.split(".")[0])
+        print_title("Results")
+        results = [f"{d.metadata['name']}\n\t{d.page_content.split('.')[0]}" for d in docs]
+        print(list_formatter(results), "\n")
 
 
 def build_vector_store(artifacts: List[Dict], vector_store_path: Optional[str] = None):

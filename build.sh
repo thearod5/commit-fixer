@@ -1,0 +1,1 @@
+docker build -t safa-cmd . && docker run -it safa-cmd

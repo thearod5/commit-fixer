@@ -1,8 +1,8 @@
 from typing import Callable, Dict, List, Optional, cast
 
-from safa_cmd.safa.constants import SAFA_AUTH_TOKEN, STORE_CRED_KEY, STORE_PROJECT_KEY
-from safa_cmd.safa.http_client import HttpClient
-from safa_cmd.safa.safa_store import SafaStore
+from safa.api.constants import SAFA_AUTH_TOKEN, STORE_PROJECT_KEY
+from safa.api.http_client import HttpClient
+from safa.api.safa_store import SafaStore
 
 
 class SafaClient:
@@ -20,23 +20,17 @@ class SafaClient:
         self.http_client = http_client
         self.store = store
 
-    def login(self, email: str, password: str, **kwargs) -> None:
+    def login(self, email: str, password: str) -> None:
         """
         Authenticates user using SAFA credentials.
         :param email: SAFA account email.
         :param password: SAFA account password.
-        :param kwargs: Additional keyword arguments passed to get_or_store
         :return: Auth token.
         """
 
-        def get_data():
-            self.http_client.post("login", {"email": email, "password": password})
-            if SAFA_AUTH_TOKEN not in self.http_client.session.cookies:
-                raise Exception("Login failed, SAFA-TOKEN not found in cookies")
-            auth_token = self.http_client.get_cookie(SAFA_AUTH_TOKEN, error="Login failed, cookie not found in base client.")
-            return auth_token
-
-        self.get_or_store(STORE_CRED_KEY, email, get_data, **kwargs)
+        self.http_client.post("login", {"email": email, "password": password})
+        if SAFA_AUTH_TOKEN not in self.http_client.session.cookies:
+            raise Exception("Login failed, SAFA-TOKEN not found in cookies")
 
     def get_version(self, version_id: str, **kwargs) -> Dict:
         """

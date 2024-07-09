@@ -13,9 +13,15 @@ Generates commit summary for currently staged changes. Commits changes if user a
 
 # TODO:
 
-- Automated way to publish new packages
+- [ ] Automated way to publish new packages
     - Needs test suite to verify use cases are not broken
-- MVP:
-    - Create new project
-    - Summary project
-- Be able to configure defaults
+- [ ] Be able to configure defaults
+    - [x] Account
+    - [x] Project
+    - [ ] Cache File
+- [x] MVP:
+    - Create new project / select existing
+    - Import project
+    - Summarize project
+    - Search Project
+    - Commit Project

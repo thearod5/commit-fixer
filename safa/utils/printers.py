@@ -1,7 +1,7 @@
 import math
 from typing import Optional
 
-from safa_cmd.constants import LINE_LENGTH
+from safa.constants import LINE_LENGTH
 
 
 def print_title(title: str, factor: float = 1) -> None:

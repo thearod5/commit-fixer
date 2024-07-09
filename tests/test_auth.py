@@ -2,8 +2,8 @@ from unittest import TestCase
 
 import responses
 
-from safa_sdk.constants import SAFA_AUTH_TOKEN
-from safa_sdk.safa_client import SafaClient
+from safa.api.constants import SAFA_AUTH_TOKEN
+from safa.api.safa_client import SafaClient
 from tests.mocker import Mocker
 
 

@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import responses
 
-from safa_cmd.safa.safa_client import SafaClient
+from safa.api.safa_client import SafaClient
 from tests.mocker import Mocker
 
 

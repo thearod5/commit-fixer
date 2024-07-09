@@ -1,9 +1,9 @@
 from getpass import getpass
 
-from safa_cmd.config import SafaConfig
-from safa_cmd.safa.safa_client import SafaClient
-from safa_cmd.tools.projects import create_new_project
-from safa_cmd.utils.menu import input_confirm, input_option
+from safa.api.safa_client import SafaClient
+from safa.safa_config import SafaConfig
+from safa.tools.projects import create_new_project
+from safa.utils.menu import input_confirm, input_option
 
 
 def configure_account(config: SafaConfig, *args) -> None:

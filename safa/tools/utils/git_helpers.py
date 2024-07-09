@@ -2,8 +2,8 @@ from typing import Dict
 
 import git
 
-from safa_cmd.utils.menu import input_option
-from safa_cmd.utils.printers import print_title
+from safa.utils.menu import input_option
+from safa.utils.printers import print_title
 
 
 def get_staged_diffs(repo: git.Repo) -> Dict[str, str]:
