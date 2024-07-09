@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 
 import git
 
@@ -43,15 +43,15 @@ def get_file_content_before(repo, file_path):
     return content_before
 
 
-def stage_files(repo: git.Repo) -> List[str]:
+def stage_files(repo: git.Repo) -> None:
     """
     Displays the files that have been changed to the user and indicates which files are staged and which are not.
     :param repo: The repository to analyze.
     :return: List of changed files and untracked files.
     """
-    print_title("Staged and Unstaged Files")
+    print_title("Repository")
 
-    changed_files = [item.a_path for item in repo.index.diff(None)]
+    changed_files = [item.a_path for item in repo.index.diff(None)] + repo.untracked_files
     staged_files = [item.a_path for item in repo.index.diff("HEAD")]
 
     if len(staged_files) == 0:
