@@ -1,25 +1,22 @@
 import os
-from typing import Dict, List
-
-from safa_sdk.safa_client import SafaClient
-from safa_sdk.util import read_file
+from typing import Dict, List, Optional
 
 from safa_cmd.config import SafaConfig
-from safa_cmd.utils.fs import list_paths, list_python_files
+from safa_cmd.safa.safa_client import SafaClient
+from safa_cmd.utils.fs import list_paths, list_python_files, read_file
 from safa_cmd.utils.menu import input_option
 from safa_cmd.utils.printers import print_title
 
 
-def run_projects(config: SafaConfig) -> None:
+def run_projects(config: SafaConfig, client: SafaClient) -> None:
     """
     Allows user to create, delete, or list projects.
     :param config: Account and repository configuration.
+    :param client: Client used to access SAFA API.
     :return: None
     """
     selected_option = input_option(["create_project", "delete_project", "list_projects"])
 
-    client = SafaClient()
-    client.login(config.email, config.password)
     if selected_option == "create_project":
         create_new_project(config, client)
     elif selected_option == "delete_project":
@@ -41,7 +38,7 @@ def create_new_project(config: SafaConfig, client: SafaClient) -> None:
     name = input("Name:")
     description = input("Description:")
 
-    directories = [p for p in list_paths(config.repo_path) if os.path.isdir(p) and p[0] != "."]
+    directories = [p for p, f in list_paths(config.repo_path) if os.path.isdir(p) and f[0] != "."]
     selected_directories = input_option(directories, title="Select Sub-Directory (empty for root dir)", allow_many=True)
     if len(selected_directories) > 0:
         python_files = list_python_files(selected_directories)
@@ -49,18 +46,7 @@ def create_new_project(config: SafaConfig, client: SafaClient) -> None:
         python_files = list_python_files(config.repo_path)
 
     code_artifacts = files_to_artifacts(python_files, config.repo_path)
-    commit_data = {
-        "artifacts": {
-            "added": code_artifacts,
-            "modified": [],
-            "removed": []
-        },
-        "traces": {
-            "added": [],
-            "modified": [],
-            "removed": []
-        }
-    }
+    commit_data = create_commit_data(artifacts_added=code_artifacts)
 
     # Create project
     print("...(1) creating project...")
@@ -71,13 +57,9 @@ def create_new_project(config: SafaConfig, client: SafaClient) -> None:
     print("...(2) saving entities...")
     commit_response = client.commit(version_id, commit_data)
 
-    print("...(3) starting hgen job...")
-    artifact_ids = [a["id"] for a in commit_response["artifacts"]["added"]]
-    client.hgen(version_id, {
-        "artifacts": artifact_ids,
-        "targetTypes": ["Functional Requirement", "Feature"]
-    })
-    print("Done!")
+    print("...(3) starting summary job...")
+    client.summarize(version_id, )
+    print("Job has been submitted! You will get an email when its done.")
 
 
 def delete_project(client: SafaClient) -> None:
@@ -123,3 +105,26 @@ def files_to_artifacts(file_paths: List[str], base_path: str) -> List[Dict]:
             "type": "Code"
         })
     return artifacts
+
+
+def create_commit_data(artifacts_added: Optional[List[Dict]] = None) -> Dict:
+    """
+    Creates commit request with parameters filled in.
+    :param artifacts_added: Artifacts being added in commit.
+    TODO: Add other parameters as needed.
+    :return: Commit data.
+    """
+    if artifacts_added is None:
+        artifacts_added = []
+    return {
+        "artifacts": {
+            "added": artifacts_added,
+            "modified": [],
+            "removed": []
+        },
+        "traces": {
+            "added": [],
+            "modified": [],
+            "removed": []
+        }
+    }

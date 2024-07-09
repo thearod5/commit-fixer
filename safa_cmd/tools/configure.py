@@ -1,10 +1,8 @@
-import getpass
 from getpass import getpass
 
-from safa_sdk.safa_client import SafaClient
-
 from safa_cmd.config import SafaConfig
-from safa_cmd.tools.safa.projects import create_new_project
+from safa_cmd.safa.safa_client import SafaClient
+from safa_cmd.tools.projects import create_new_project
 from safa_cmd.utils.menu import input_confirm, input_option
 
 
@@ -24,13 +22,13 @@ def configure_account(config: SafaConfig) -> None:
         print("Safa account password is set.")
 
 
-def configure_existing_project(config: SafaConfig) -> None:
+def configure_existing_project(config: SafaConfig, client: SafaClient) -> None:
     """
     Configures repository project from an existing project.
     :param config: Safa configuration.
+    :param client: Client used to access SAFA API.
     :return: None
     """
-    client = SafaClient()
     client.login(config.email, config.password)
 
     if config.version_id is None:
@@ -47,17 +45,11 @@ def configure_existing_project(config: SafaConfig) -> None:
         print("Current Version ID:", config.version_id)
         if input_confirm(title="Override version Id?"):
             config.version_id = None
-            return configure_existing_project(config)
+            return configure_existing_project(config, client)
     print("Project version successfully configured.")
 
 
-def configure_new_project(config: SafaConfig):
-    client = SafaClient()
-    client.login(config.email, config.password)
-    create_new_project(config, client)
-
-
-def run_config_tool(config: SafaConfig):
+def run_config_tool(config: SafaConfig, client: SafaClient):
     entity_type = input_option(["account", "project", "back"])
 
     if entity_type == "account":
@@ -65,9 +57,9 @@ def run_config_tool(config: SafaConfig):
     elif entity_type == "project":
         project_setup_type = input_option(["create_new", "select_existing"], title="How do you want to setup your project?")
         if project_setup_type == "create_new":
-            configure_new_project(config)
+            create_new_project(config, client)
         elif project_setup_type == "select_existing":
-            configure_existing_project(config)
+            configure_existing_project(config, client)
         else:
             raise Exception("Unknown project option:" + entity_type)
     elif entity_type == "done":
@@ -77,4 +69,4 @@ def run_config_tool(config: SafaConfig):
 
     config.to_env()
     print("Configure Updated.")
-    return run_config_tool(config)
+    return run_config_tool(config, client)

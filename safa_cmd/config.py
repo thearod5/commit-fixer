@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
-from safa_cmd.utils.fs import write_file_content
+from safa_cmd.utils.fs import clean_path, write_file_content
 
 
 @dataclass
@@ -30,8 +30,8 @@ class SafaConfig:
         version_id = os.environ.get("SAFA_VERSION_ID")
         cache_file_path = os.environ.get("SAFA_CACHE_FILE_PATH")
         if cache_file_path:
-            cache_file_path = os.path.expanduser(cache_file_path)
-        return SafaConfig(repo_path=os.path.expanduser(repo_path),
+            cache_file_path = clean_path(cache_file_path)
+        return SafaConfig(repo_path=clean_path(repo_path),
                           email=email,
                           password=password,
                           version_id=version_id,

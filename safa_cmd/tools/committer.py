@@ -1,26 +1,26 @@
 from typing import Dict, List
 
 import git
-from safa_sdk.safa_client import SafaClient
 
 from safa_cmd.config import SafaConfig
 from safa_cmd.data.artifact_json import ArtifactJson
 from safa_cmd.data.file_change import FileChange
-from safa_cmd.tools.comitter.generate import generate_summary
-from safa_cmd.tools.comitter.git_helpers import get_file_content_before, get_staged_diffs, stage_files
+from safa_cmd.safa.safa_client import SafaClient
+from safa_cmd.tools.utils.generate import generate_summary
+from safa_cmd.tools.utils.git_helpers import get_file_content_before, get_staged_diffs, stage_files
 from safa_cmd.utils.markdown import list_formatter
 from safa_cmd.utils.menu import input_option
 from safa_cmd.utils.printers import print_title
 
 
-def run_committer(config: SafaConfig):
+def run_committer(config: SafaConfig, client: SafaClient):
     """
     Reads staged changes and generates commit details (i.e. title, changes). Allows user to edit afterwards.
     :param config: The configuration of the tool.
     :return:
     """
     print_title("Committer Tool")
-    project_data = get_safa_project(config)
+    project_data = get_safa_project(config, client)
     artifact_map = create_artifact_name_lookup(project_data["artifacts"])
 
     repo = git.Repo(config.repo_path)
@@ -57,7 +57,14 @@ def create_file_changes(file2diff, artifact_map: Dict[str, ArtifactJson], repo) 
     return changes
 
 
-def run_commit_menu(repo, title, changes):
+def run_commit_menu(repo: git.Repo, title: str, changes: List[str]) -> None:
+    """
+    Runs commit management menu.
+    :param repo: Repository that commit is being applied to.
+    :param title: The current title of the commit.
+    :param changes: The current changes to the commit.
+    :return: None
+    """
     menu_options = ["Edit Title", "Edit Change", "Remove Change", "Add Change", "Commit"]
     running = True
     while running:
@@ -82,15 +89,13 @@ def run_commit_menu(repo, title, changes):
             raise Exception("Invalid option")
 
 
-def get_safa_project(config: SafaConfig):
+def get_safa_project(config: SafaConfig, client: SafaClient):
     """
     Reads SAFA project.
     :param config: Configuration detailing account details and project.
     :return: The project data.
     """
     print("...retrieving safa project...")
-    client = SafaClient()
-    client.login(config.email, config.password)
     project_data = client.get_version(config.version_id)
     print("Project Name: ", project_data["name"])
     return project_data

@@ -61,5 +61,7 @@ def stage_files(repo: git.Repo) -> List[str]:
         for i, file in enumerate(staged_files):
             print(f"{i + 1}. {file}")
 
+    if len(changed_files) == 0:
+        return
     to_stage = input_option(changed_files, title="Unstaged Files", allow_many=True)
     repo.index.add(to_stage)

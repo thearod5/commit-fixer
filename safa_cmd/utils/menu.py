@@ -1,6 +1,8 @@
 import sys
 from typing import Any, List
 
+from safa_cmd.utils.printers import print_bar, print_title
+
 
 def input_option(options: List[str], retries=0, max_retries=3, title: str = "Options", allow_many: bool = False):
     """
@@ -14,16 +16,21 @@ def input_option(options: List[str], retries=0, max_retries=3, title: str = "Opt
     if retries >= max_retries:
         raise Exception("Max retries has been reached.")
 
-    instructions = "Enter the options as a comma-delimited list (or 'a' for all)" if allow_many else "Enter the option number."
+    instructions = "Enter the options as a comma-delimited list (or 'a' for all)" if allow_many else "Enter the option number"
 
-    print(f"\n{title}:")
+    print_title(title)
+    print(instructions)
+    max_length = 0
     for i, option in enumerate(options):
-        print(f"{i + 1})", option)
-    print(f"\n{len(options) + 1}) Exit")
+        prefix = f"{i + 1})"
+        print(prefix, option)
+        max_length = max(max_length, len(prefix) + len(option) + 1)
+    print_bar(length=max_length)
+    print(f"{len(options) + 1}) Exit")
     exit_idx = len(options)
 
     try:
-        option = input(f"{instructions}:").lower().strip()
+        option = input(f"\nSelection:").lower().strip()
         if option == str(exit_idx + 1):
             print("Good Bye.")
             sys.exit(0)
