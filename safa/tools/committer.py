@@ -37,10 +37,14 @@ def run_committer(config: SafaConfig, client: SafaClient):
     title, changes = run_commit_menu(repo, title, changes)
     if input_confirm("Add commit to SAFA project?", default_value="y"):
         project_version = client.create_version(config.project_id, "revision")
+        new_version_id = project_version["versionId"]
+        config.version_id = new_version_id
+        config.to_env()
+
         commit_data = create_commit_safa_changes(project_version, list(file2diff.keys()), title, changes)
-        commit_response = client.commit(project_version["versionId"], commit_data)
+        commit_response = client.commit(project_version[new_version_id], commit_data)
         print_commit_response(commit_response)
-        print(f"Commit finished! See project @ https://app.safa.ai/project?version={config.get_version_id()}")
+        print(f"Commit finished! See project @ https://app.safa.ai/project?version={new_version_id}")
 
 
 def create_commit_safa_changes(project_version, files: List[str], title: str, changes: List[str]):

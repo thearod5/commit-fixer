@@ -39,4 +39,6 @@ def print_commit_response(response: Dict, keys: Optional[List[str]] = None) -> N
         keys = ["artifacts", "traces"]
     for entity_type in keys:
         for mod_type, mod_items in response[entity_type].items():
-            print(f"{entity_type}: {mod_type}: {len(mod_items)}")
+            n_items = len(mod_items)
+            if n_items > 0:
+                print(f"{entity_type}: {mod_type}: {n_items}")
