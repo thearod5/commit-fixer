@@ -50,7 +50,7 @@ TOOLS: Dict[str, Tuple[ToolType, List[str]]] = {
     "Search": (run_search, ["project"]),
     "Manage Projects": (run_project_management, ["project"]),
     "Configure Project": (run_configure_project, ["user"]),
-    "Configure Account": (run_configure_account, ["*"]),  # type: ignore
+    "Configure Account": (run_configure_account, ["*"]),
 }
 
 tool2group = {
@@ -64,7 +64,7 @@ def main() -> None:
     Allows users to run tools.
     :return: None
     """
-    print("\n", safa_banner.strip())
+    print("\n", safa_banner.strip(), "\n\n")
 
     repo_path = clean_path(sys.argv[1]) if len(sys.argv) >= 2 else os.path.abspath("")
     env_file_path = sys.argv[2] if len(sys.argv) >= 3 else None
@@ -97,7 +97,8 @@ def create_safa_client(config: SafaConfig) -> SafaClient:
     :return: Safa Client created.
     """
     base_url = os.environ.get("BASE_URL", "https://api.safa.ai")
-    http_client = HttpClient(base_url, global_parameters={"verify": False})
+    global_parameters = {"verify": False} if "localhost" in base_url else {}
+    http_client = HttpClient(base_url, global_parameters=global_parameters)
     store = SafaStore(cache_file_path=config.cache_file_path)
     client = SafaClient(store, http_client=http_client)
     if config.email is None:
@@ -131,7 +132,7 @@ def configure(config: SafaConfig) -> SafaClient:
     print_title("Welcome to your new project.")
     print(configure_message)
 
-    if not input_confirm("Do you want to continue configuration?"):
+    if not input_confirm("Do you want to continue configuration?", default_value="y"):
         print("Okay :)")
         sys.exit(-1)
 

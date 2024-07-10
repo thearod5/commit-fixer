@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from safa.data.file_change import FileChange
 from safa.utils.llm_manager import get_llm_manager
@@ -28,7 +28,7 @@ SUMMARIZE_FORMAT = {
 }
 
 
-def generate_summary(file_changes: List[FileChange], project_summary: str):
+def generate_summary(file_changes: List[FileChange], project_summary: str) -> Tuple[str, List[str]]:
     """
     Generates summary for list of changes.
     :param file_changes: File changes to summarize into one commit.

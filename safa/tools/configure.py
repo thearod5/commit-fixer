@@ -40,6 +40,7 @@ def configure_existing_project(config: SafaConfig, client: SafaClient) -> None:
         pv_options = {f"{v['majorVersion']}.{v['minorVersion']}.{v['revision']}": v for v in project_versions}
         pv_selected = input_option(list(pv_options.keys()))
         selected_version = pv_options[pv_selected]
+        config.project_id = selected_project["projectId"]
         config.version_id = selected_version["versionId"]
     else:
         print("Current Version ID:", config.version_id)
@@ -48,28 +49,6 @@ def configure_existing_project(config: SafaConfig, client: SafaClient) -> None:
             return configure_existing_project(config, client)
     print("Project version successfully configured.")
     config.to_env()
-
-
-def run_config_tool(config: SafaConfig, client: SafaClient):
-    entity_type = input_option(["account", "project", "back"])
-
-    if entity_type == "account":
-        run_configure_account(config)
-    elif entity_type == "project":
-        project_setup_type = input_option(["create_new", "select_existing"], title="How do you want to setup your project?")
-        if project_setup_type == "create_new":
-            create_new_project(config, client)
-        elif project_setup_type == "select_existing":
-            configure_existing_project(config, client)
-        else:
-            raise Exception("Unknown project option:" + entity_type)
-    elif entity_type == "done":
-        return
-    else:
-        raise Exception(f"Invalid entity type: {entity_type}")
-
-    print("Configure Updated.")
-    return run_config_tool(config, client)
 
 
 def run_configure_project(config: SafaConfig, client: SafaClient, title: str = "How do you want to setup your project?") -> None:

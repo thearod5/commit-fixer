@@ -57,6 +57,7 @@ def print_option_items(instructions, options, title, group2items: Dict[str, str]
         for group, items in group2items.items():
             item_displays = [option2item[o] for o in items]
             print(group)
+            print_bar(length=len(group))
             print("\n".join(item_displays))
             print()
     else:
@@ -97,6 +98,9 @@ def input_confirm(title: str = "Confirm?", y_option="y", n_option="n", default_v
     :param default_value: Value to used if user returns empty response.
     :return: Whether user confirmed.
     """
+    valid_options = [y_option, n_option]
+    if default_value and default_value not in valid_options:
+        raise Exception(f"Expected {default_value} to be one of {valid_options}")
     label = f"{title} ({y_option}/{n_option} or {default_value} if empty)" if default_value else f"{title} ({y_option}/{n_option})"
     user_selection = input(label)
     if user_selection == "":

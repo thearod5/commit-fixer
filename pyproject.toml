@@ -1,6 +1,6 @@
 [project]
 name = "safa"
-version = "0.0.2"
+version = "0.0.3"
 description = "A command line tool for running SAFA in the command line."
 authors = [
     { name = "Alberto Rodriguez", email = "alberto@safa.ai.com" }

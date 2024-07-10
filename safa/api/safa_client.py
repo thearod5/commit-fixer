@@ -88,6 +88,11 @@ class SafaClient:
         response = self.http_client.post(f"projects/versions/{version_id}/summarize", data={})
         return cast(Dict, response)
 
+    def create_version(self, project_id: str, version_type: str = "revision") -> Dict:
+        assert version_type in ["revision", "major", "minor"]
+        project_version = self.http_client.post(f"projects/{project_id}/versions/{version_type}")
+        return project_version
+
     def get_or_store(self, entity_type: str, entity_id: str, get_lambda: Callable, use_store: bool = True) -> Dict:
         """
         Checks store for entity, if found returns it, otherwise get_lambda is called and processed.

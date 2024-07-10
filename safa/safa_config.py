@@ -30,11 +30,22 @@ class SafaConfig:
     # user defined
     email: Optional[str]
     password: Optional[str]
+    project_id: Optional[str]
     version_id: Optional[str]
 
     @staticmethod
-    def from_repo(repo_path: str, root_env_file_path: Optional[str] = None):
+    def from_repo(repo_path: str, root_env_file_path: Optional[str] = None) -> "SafaConfig":
+        """
+        Creates configuration from repo.
+        :param repo_path: Path to repo.
+        :param root_env_file_path: Additional env file to include.
+        :return: Config with loaded variables if they exist.
+        """
+        # User Setting
         repo_path = clean_path(repo_path)
+        repo_path = os.environ.get("SAFA_REPO_PATH", repo_path)
+
+        # Config-Relative paths
         config_path = os.path.join(repo_path, CONFIG_FOLDER)
         env_file_path = os.path.join(config_path, ENV_FILE)
         vector_store_path = os.path.join(config_path, CHROMA_FOLDER)
@@ -46,50 +57,46 @@ class SafaConfig:
             root_env_file_path = os.path.join(repo_path, ENV_FILE)
         load_dotenv(root_env_file_path)
 
-        # Config-Relative paths
-        repo_path = os.environ.get("SAFA_REPO_PATH", repo_path)
-        vector_store_path = os.environ.get("SAFA_VECTOR_STORE_PATH", vector_store_path)
-
-        # User Settings
-        email = os.environ.get("SAFA_EMAIL")
-        password = os.environ.get("SAFA_PASSWORD")
-        version_id = os.environ.get("SAFA_VERSION_ID")
-
-        return SafaConfig(repo_path=repo_path,
-                          config_path=config_path,
-                          env_file_path=env_file_path,
-                          email=email,
-                          password=password,
-                          version_id=version_id,
-                          cache_file_path=cache_file_path,
-                          vector_store_path=vector_store_path)
+        return SafaConfig(
+            # User Paths
+            repo_path=repo_path,
+            email=os.environ.get("SAFA_EMAIL"),
+            password=os.environ.get("SAFA_PASSWORD"),
+            project_id=os.environ.get("SAFA_PROJECT_ID"),
+            version_id=os.environ.get("SAFA_VERSION_ID"),
+            # Config paths
+            config_path=config_path,
+            env_file_path=env_file_path,
+            cache_file_path=cache_file_path,
+            vector_store_path=vector_store_path
+        )
 
     def to_env(self):
-        env_vars = {}
-        if self.repo_path:
-            env_vars["SAFA_REPO_PATH"] = self.repo_path
-        else:
-            raise Exception("SAFA Repo path must be set.")
-        if self.email:
-            env_vars["SAFA_EMAIL"] = self.email
-        if self.password:
-            env_vars["SAFA_PASSWORD"] = self.password
-        if self.version_id:
-            env_vars["SAFA_VERSION_ID"] = self.version_id
-        if self.cache_file_path:
-            env_vars["SAFA_CACHE_FILE_PATH"] = self.cache_file_path
+        """
+        Converts config to env file.
+        :return: None
+        """
+        vars_to_store = ["repo_path", "email", "password", "project_id", "version_id", "cache_file_path"]
 
-        env_line_items = [f"{k}={v}" for k, v in env_vars.items()]
+        env_line_items = [
+            f"SAFA_{k.upper()}={getattr(self, k)}"
+            for k in vars_to_store
+        ]
         env_content = "\n".join(env_line_items)
         write_file_content(self.env_file_path, env_content)
         print(f"Configuration file written to {self.env_file_path}")
 
     def is_configured(self) -> bool:
+        """
+        Whether all necessary SAFA variables are configured.
+        :return: Whether config contains necessary information.
+        """
         return (
                 os.path.exists(self.env_file_path) and
                 os.path.exists(self.cache_file_path) and
                 self.email and
                 self.password and
+                self.project_id and
                 self.version_id
         )
 
@@ -109,6 +116,7 @@ class SafaConfig:
         config_items = {
             "Repository": self.repo_path,
             "Account": self.email,
+            "Project ID": self.project_id,
             "Version ID": self.version_id
         }
         item_display = [f"{k}={v}" for k, v in config_items.items()]

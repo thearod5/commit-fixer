@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import git
 
@@ -6,10 +6,11 @@ from safa.api.safa_client import SafaClient
 from safa.data.artifact_json import ArtifactJson
 from safa.data.file_change import FileChange
 from safa.safa_config import SafaConfig
-from safa.tools.utils.generate import generate_summary
+from safa.tools.projects import create_commit_data
+from safa.tools.utils.generate_diff_summary import generate_summary
 from safa.tools.utils.git_helpers import get_file_content_before, get_staged_diffs, stage_files
 from safa.utils.markdown import list_formatter
-from safa.utils.menu import input_option
+from safa.utils.menu import input_confirm, input_option
 from safa.utils.printers import print_title
 
 
@@ -33,7 +34,27 @@ def run_committer(config: SafaConfig, client: SafaClient):
     changes = create_file_changes(file2diff, artifact_map, repo)
     title, changes = generate_summary(changes, project_data["specification"])
 
-    run_commit_menu(repo, title, changes)
+    title, changes = run_commit_menu(repo, title, changes)
+    if input_confirm("Add commit to SAFA project?", default_value="y"):
+        client.create_version(config.version_id)
+        commit_data = create_commit_safa_changes(list(file2diff.keys()), title, changes)
+        commit_response = client.commit(config.get_version_id(), commit_data)
+        print_commit_response(commit_response)
+        print(f"Commit finished! See project @ https://app.safa.ai/project?version={config.get_version_id()}")
+
+
+def create_commit_safa_changes(files: List[str], title: str, changes: List[str]):
+    artifacts = [{
+        "name": title,
+        "summary": "",
+        "body": list_formatter(changes),
+        "type": "Commit"
+    }]
+    traces = [{
+        "targetName": title,
+        "sourceName": f
+    } for f in files]
+    return create_commit_data(artifacts_added=artifacts, traces_added=traces)
 
 
 def create_file_changes(file2diff, artifact_map: Dict[str, ArtifactJson], repo) -> List[FileChange]:
@@ -57,7 +78,7 @@ def create_file_changes(file2diff, artifact_map: Dict[str, ArtifactJson], repo) 
     return changes
 
 
-def run_commit_menu(repo: git.Repo, title: str, changes: List[str]) -> None:
+def run_commit_menu(repo: git.Repo, title: str, changes: List[str]) -> Tuple[str, List[str]]:
     """
     Runs commit management menu.
     :param repo: Repository that commit is being applied to.
@@ -67,8 +88,7 @@ def run_commit_menu(repo: git.Repo, title: str, changes: List[str]) -> None:
     """
     print_title("Commit Menu")
     menu_options = ["Edit Title", "Edit Change", "Remove Change", "Add Change", "Commit"]
-    running = True
-    while running:
+    while True:
         print_commit_message(title, changes, format_type="numbered")
         selected_option = input_option(menu_options)
         option_num = menu_options.index(selected_option)
@@ -85,7 +105,7 @@ def run_commit_menu(repo: git.Repo, title: str, changes: List[str]) -> None:
             changes.append(input("New Change:"))
         elif option_num == 4:
             repo.index.commit(to_commit_message(title, changes))
-            running = False
+            return title, changes
         else:
             raise Exception("Invalid option")
 

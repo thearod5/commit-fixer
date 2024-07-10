@@ -18,7 +18,10 @@ Generates commit summary for currently staged changes. Commits changes if user a
 - [ ] Be able to configure defaults
     - [x] Account
     - [x] Project
-    - [ ] Cache File
+    - [x] Cache File
+    - [ ] LLM Settings
+- [ ] Chat with your project
+- [ ] Task manager
 - [x] MVP:
     - Create new project / select existing
     - Import project

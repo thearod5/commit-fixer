@@ -6,7 +6,7 @@ from safa.api.safa_client import SafaClient
 from safa.safa_config import SafaConfig
 from safa.utils.fs import list_paths, list_python_files, read_file
 from safa.utils.menu import input_option
-from safa.utils.printers import print_title
+from safa.utils.printers import print_commit_response, print_title
 
 
 def run_project_management(config: SafaConfig, client: SafaClient) -> None:
@@ -60,16 +60,19 @@ def create_new_project(config: SafaConfig, client: SafaClient) -> None:
         python_files = list_python_files(config.repo_path)
 
     code_artifacts = files_to_artifacts(python_files, config.repo_path)
-    commit_data = create_commit_data(artifacts_added=code_artifacts)
 
     # Create project
     print("...(1) creating project...")
     project_data = client.create_project(name, description)
+    config.project_id = project_data["projectId"]
+    project_version = project_data["projectVersion"]
     version_id = project_data["projectVersion"]["versionId"]
     config.version_id = version_id
 
     print("...(2) saving entities...")
+    commit_data = create_commit_data(project_version, artifacts_added=code_artifacts)
     commit_response = client.commit(version_id, commit_data)
+    print_commit_response(commit_response)
 
     print("...(3) starting summary job...")
     client.summarize(version_id, )
@@ -122,23 +125,30 @@ def files_to_artifacts(file_paths: List[str], base_path: str) -> List[Dict]:
     return artifacts
 
 
-def create_commit_data(artifacts_added: Optional[List[Dict]] = None) -> Dict:
+def create_commit_data(project_version: Dict,
+                       artifacts_added: Optional[List[Dict]] = None,
+                       traces_added: Optional[List[Dict]] = None) -> Dict:
     """
     Creates commit request with parameters filled in.
+    :param project_version: Project version to commit to.
     :param artifacts_added: Artifacts being added in commit.
+    :param traces_added: Traces being added in commit.
     TODO: Add other parameters as needed.
     :return: Commit data.
     """
     if artifacts_added is None:
         artifacts_added = []
+    if traces_added is None:
+        traces_added = []
     return {
+        "commitVersion": project_version,
         "artifacts": {
             "added": artifacts_added,
             "modified": [],
             "removed": []
         },
         "traces": {
-            "added": [],
+            "added": traces_added,
             "modified": [],
             "removed": []
         }
