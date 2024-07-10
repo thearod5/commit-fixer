@@ -11,7 +11,7 @@ from safa.tools.utils.generate_diff_summary import generate_summary
 from safa.tools.utils.git_helpers import get_file_content_before, get_staged_diffs, stage_files
 from safa.utils.markdown import list_formatter
 from safa.utils.menu import input_confirm, input_option
-from safa.utils.printers import print_title
+from safa.utils.printers import print_commit_response, print_title
 
 
 def run_committer(config: SafaConfig, client: SafaClient):
@@ -36,14 +36,14 @@ def run_committer(config: SafaConfig, client: SafaClient):
 
     title, changes = run_commit_menu(repo, title, changes)
     if input_confirm("Add commit to SAFA project?", default_value="y"):
-        client.create_version(config.version_id)
-        commit_data = create_commit_safa_changes(list(file2diff.keys()), title, changes)
-        commit_response = client.commit(config.get_version_id(), commit_data)
+        project_version = client.create_version(config.project_id, "revision")
+        commit_data = create_commit_safa_changes(project_version, list(file2diff.keys()), title, changes)
+        commit_response = client.commit(project_version["versionId"], commit_data)
         print_commit_response(commit_response)
         print(f"Commit finished! See project @ https://app.safa.ai/project?version={config.get_version_id()}")
 
 
-def create_commit_safa_changes(files: List[str], title: str, changes: List[str]):
+def create_commit_safa_changes(project_version, files: List[str], title: str, changes: List[str]):
     artifacts = [{
         "name": title,
         "summary": "",
@@ -54,7 +54,7 @@ def create_commit_safa_changes(files: List[str], title: str, changes: List[str])
         "targetName": title,
         "sourceName": f
     } for f in files]
-    return create_commit_data(artifacts_added=artifacts, traces_added=traces)
+    return create_commit_data(project_version, artifacts_added=artifacts, traces_added=traces)
 
 
 def create_file_changes(file2diff, artifact_map: Dict[str, ArtifactJson], repo) -> List[FileChange]:
