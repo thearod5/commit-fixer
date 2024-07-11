@@ -101,8 +101,12 @@ def main(repo_path: str, env_file_path: Optional[str] = None, tool: Optional[str
             option_selected = input_option(tool_options, title="Command", groups=group2tools)
         else:
             option_selected = tool
+
         tool_func, tool_permissions = TOOLS[option_selected]
         tool_func(config, client)
+
+        if tool:
+            return
 
 
 configure_message_template = (
