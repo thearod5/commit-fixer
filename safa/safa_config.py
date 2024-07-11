@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 from dotenv import load_dotenv
 
@@ -125,6 +125,18 @@ class SafaConfig:
         if self.project_id is None or self.version_id is None or self.commit_id:
             raise Exception("One of project_id, version_id, or commit_id is None.")
         return self.project_id, self.version_id, self.commit_id  # type: ignore
+
+    def get_configured_entities(self) -> List[str]:
+        """
+        Returns entities configured.
+        :return: List of entities.
+        """
+        permissions = []
+        if self.has_account():
+            permissions.append("user")
+        if self.has_version_id():
+            permissions.append("project")
+        return permissions
 
     def __to_env(self):
         """

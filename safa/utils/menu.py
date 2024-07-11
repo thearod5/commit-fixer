@@ -1,6 +1,7 @@
 import sys
 from typing import Any, Dict, List, Optional
 
+from safa.constants import GROUP_DELIMITER
 from safa.utils.printers import print_bar, print_title
 
 
@@ -131,7 +132,7 @@ def input_confirm(title: str = "Confirm?", y_option="y", n_option="n", default_v
 
 
 def print_groups(options: Dict[str, str], groups: Dict[str, str | Dict], prefix: str = "", idx2option: Dict[str, str] = None):
-    _verify_group_options(options.keys(), groups)
+    _verify_group_options(list(options.keys()), groups)
     if idx2option is None:
         idx2option = {}
     for group_name, group in groups.items():
@@ -139,8 +140,8 @@ def print_groups(options: Dict[str, str], groups: Dict[str, str | Dict], prefix:
         if isinstance(group, list):
             for item in group:
                 i = len(idx2option) + 1
-                print(f"{prefix}\t{i}: {options[item]}")
+                print(f"{prefix}{GROUP_DELIMITER}{i}: {options[item]}")
                 idx2option[i] = item
         else:
-            print_groups(options, group, prefix=prefix + "\t", idx2option=idx2option)
+            print_groups(options, group, prefix=prefix + GROUP_DELIMITER, idx2option=idx2option)
     return idx2option

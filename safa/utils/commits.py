@@ -7,6 +7,7 @@ from git import Blob, Commit, Repo
 
 from safa.utils.markdown import list_formatter
 from safa.utils.menu import input_confirm, input_option
+from safa.utils.page_menu import PageMenu
 
 
 def select_commits(repo: Repo) -> List[Commit]:
@@ -30,7 +31,7 @@ def select_commits(repo: Repo) -> List[Commit]:
     return commits
 
 
-def input_commit(repo: Repo, n_commits: int = 5, prompt: str = "Select Commit", many: bool = False) -> Commit | List[Commit]:
+def input_commit(repo: Repo, **kwargs) -> Commit | List[Commit]:
     """
     Prompts user to select commit.
     :param repo: Repository to select commit from.
@@ -39,64 +40,18 @@ def input_commit(repo: Repo, n_commits: int = 5, prompt: str = "Select Commit", 
     :param many: Whether user can select many commits.
     :return: Commit selected.
     """
-
-    page = 0
+    # Calculate commits
     branch_name = select_branch(repo)
     branch_commits = [c for c in repo.iter_commits(rev=branch_name)]
-
-    max_pages = len(branch_commits) // n_commits
-    max_pages = max_pages if len(branch_commits) % n_commits == 0 else max_pages + 1
     id2commit = {commit_repr(c): c for i, c in enumerate(branch_commits)}
     commit_keys = list(id2commit.keys())
 
-    running = True
-    selected_commits: List[Commit] = []
-    while running:
-        actions = []
-
-        if page < max_pages - 1:
-            actions.append("next_page")
-        if page > 0:
-            actions.append("previous_page")
-        if page < max_pages - 1:
-            actions.append("last_page")
-        if page > 0:
-            actions.append("first_page")
-
-        if many:
-            actions.append("input_sha")
-            actions.append("finish_selection")
-
-        start_idx = page * n_commits
-        end_idx = start_idx + n_commits
-        page_commits_keys = commit_keys[start_idx: end_idx]
-        items = page_commits_keys + actions
-
-        group2items = {"Commit": [k for k in page_commits_keys], "Actions": actions}
-        title = f"{prompt}\nPage:{page}/{max_pages}"
-        if many:
-            title += f"\nCommits: {[commit_repr(c) for c in selected_commits]}"
-        selected_commit_id = input_option(items, title=title, group2items=group2items)
-        if selected_commit_id == "next_page":
-            page = page if page >= max_pages else page + 1
-        elif selected_commit_id == "previous_page":
-            page = page - 1 if page > 0 else 0
-        elif selected_commit_id == "last_page":
-            page = max_pages - 1
-        elif selected_commit_id == "input_sha":
-            inputted_commits = [repo.commit(s.strip()) for s in input("HEXSHA(s):").split(",")]
-            selected_commits.extend(inputted_commits)
-        elif selected_commit_id == "finish_selection":
-            return selected_commits
-        elif selected_commit_id == "first_page":
-            page = 0
-        else:
-            selected_commit = id2commit[selected_commit_id]
-            if many:
-                selected_commits.append(selected_commit)
-            else:
-                return selected_commit
-    raise Exception("")
+    # Start selection menu
+    page_menu = PageMenu(commit_keys, **kwargs)
+    selected_commit_ids = page_menu.select()
+    if isinstance(selected_commit_ids, list):
+        return [id2commit[commit_id] for commit_id in selected_commit_ids]
+    return id2commit[selected_commit_ids]
 
 
 def get_repo_commit(repo: Optional[git.Repo] = None, repo_path: Optional[str] = None) -> Commit:
