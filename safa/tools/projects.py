@@ -94,7 +94,8 @@ def run_push_project(config: SafaConfig, client: SafaClient):
 
     for i, commit in tqdm(list(enumerate(commits))):
         # create new version
-        project_version = client.create_version(project_id, "revision")
+        version_type = ("major" if i % 100 == 0 else "minor") if i % 10 == 0 else "revision"
+        project_version = client.create_version(project_id, version_type)
 
         # Create commit data
         commit_data = calculate_diff(repo, commit, starting_commit=s_commit, prefix=f"{version_repr(project_version)}: ")
