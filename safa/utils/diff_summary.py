@@ -27,6 +27,8 @@ SUMMARIZE_FORMAT = {
     "title": "commit title"
 }
 
+EMPTY_PROJECT_SUMMARY = "Project summary has not been generated yet."
+
 
 def generate_summary(file_changes: List[FileChange], project_summary: str) -> Tuple[str, List[str]]:
     """
@@ -39,7 +41,7 @@ def generate_summary(file_changes: List[FileChange], project_summary: str) -> Tu
     system_prompt = "\n\n".join([SUMMARIZE_INSTRUCTIONS, get_format_prompt(SUMMARIZE_FORMAT)])
     messages = [
         ("system", system_prompt),
-        ("human", project_summary),
+        ("human", project_summary if project_summary else EMPTY_PROJECT_SUMMARY),
         ("human", prompt)
     ]
     print("...generating...")

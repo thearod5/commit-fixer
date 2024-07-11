@@ -7,7 +7,7 @@ from safa.api.client_factory import create_safa_client
 from safa.api.constants import STORE_PROJECT_KEY
 from safa.api.safa_client import SafaClient
 from safa.safa_config import SafaConfig
-from safa.tools.git_history import run_git_history
+from safa.tools.push_to_safa import run_push_to_safa
 from safa.utils.commits import input_commit
 from safa.utils.diffs import calculate_diff
 from safa.utils.fs import read_file
@@ -32,7 +32,7 @@ def run_project_management(config: SafaConfig, client: SafaClient) -> None:
     elif selected_option == "list_projects":
         list_projects(client)
     elif selected_option == "import_git_history":
-        run_git_history(config, client)
+        run_push_to_safa(config, client)
     else:
         raise Exception(f"Invalid option: {selected_option}")
 
@@ -59,7 +59,8 @@ def create_new_project(config: SafaConfig, client: SafaClient) -> None:
     print_title("Creating New Project")
     name = input("Project Name:")
     description = input("Project Description:")
-    commit = input_commit(config.repo_path, prompt="Select commit to import project")
+    repo = git.Repo(config.repo_path)
+    commit = input_commit(repo, prompt="Select commit to import project")
 
     # Calculate changes since the start
     repo = git.Repo(config.repo_path)

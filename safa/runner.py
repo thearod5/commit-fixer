@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 from safa.api.client_factory import create_safa_client
 from safa.api.safa_client import SafaClient
+from safa.tools.push_to_safa import run_push_to_safa
 from safa.tools.search import run_search
 from safa.utils.fs import clean_path, write_json
 from safa.utils.printers import print_title
@@ -47,14 +48,16 @@ ToolType = Callable[[SafaConfig, SafaClient], None]
 TOOLS: Dict[str, Tuple[ToolType, List[str]]] = {
     "Commit": (run_committer, ["project"]),
     "Search": (run_search, ["project"]),
+    "Push to Safa": (run_push_to_safa, ["user"]),
     "Manage Projects": (run_project_management, ["project"]),
     "Configure Project": (run_configure_project, ["user"]),
     "Configure Account": (run_configure_account, ["*"]),
 }
 
 group2tools: Dict[str, List[str]] = {
-    "Tool": ["Commit", "Search"],
-    "Setting": ["Manage Projects", "Configure Project", "Configure Account"]
+    "Tools": ["Commit", "Search"],
+    "Safa": ["Manage Projects", "Push to Safa"],
+    "Setting": ["Configure Project", "Configure Account"]
 }
 
 

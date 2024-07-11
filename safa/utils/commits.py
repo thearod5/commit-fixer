@@ -8,17 +8,38 @@ from safa.utils.markdown import list_formatter
 from safa.utils.menu import input_option
 
 
-def input_commit(repo_path: str, n_commits: int = 5, prompt: str = "Select Commit") -> Commit:
+def select_commits(repo: Repo) -> List[Commit]:
+    """
+    Prompts user to select which commits to import.
+    :param repo: The repository to select commits from.
+    :return: List of commits to import.
+    """
+    commit_import_options = ["single commit", "multiple commits"]
+    commit_import_option = input_option(commit_import_options)
+    if commit_import_option == "single commit":
+        commits = [input_commit(repo, many=False)]
+    elif commit_import_option == "multiple commits":
+        if input_confirm(title="Import all commits?"):
+            branch_name = select_branch(repo)
+            commits = [c for c in repo.iter_commits(rev=branch_name)]
+        else:
+            commits = cast(List[Commit], input_commit(repo, many=True))
+    else:
+        raise Exception(f"Expected answer to be one of {commit_import_options}")
+    return commits
+
+
+def input_commit(repo: Repo, n_commits: int = 5, prompt: str = "Select Commit", many: bool = False) -> Commit | List[Commit]:
     """
     Prompts user to select commit.
-    :param repo_path: Path to repository to select commit from.
+    :param repo: Repository to select commit from.
     :param n_commits: The number of commits to display.
     :param prompt: The title to prompt user with.
+    :param many: Whether user can select many commits.
     :return: Commit selected.
     """
 
     page = 0
-    repo = git.Repo(repo_path)
     branch_name = select_branch(repo)
     branch_commits = [c for c in repo.iter_commits(rev=branch_name)]
 
@@ -28,8 +49,10 @@ def input_commit(repo_path: str, n_commits: int = 5, prompt: str = "Select Commi
     commit_keys = list(id2commit.keys())
 
     running = True
+    selected_commits = []
     while running:
         actions = []
+
         if page < max_pages - 1:
             actions.append("next_page")
         if page > 0:
@@ -39,21 +62,33 @@ def input_commit(repo_path: str, n_commits: int = 5, prompt: str = "Select Commi
         if page > 0:
             actions.append("first_page")
 
+        if many:
+            actions.append("finish_selection")
+
         start_idx = page * n_commits
         end_idx = start_idx + n_commits
         page_commits_keys = commit_keys[start_idx: end_idx]
         items = page_commits_keys + actions
 
         group2items = {"Commit": [k for k in page_commits_keys], "Actions": actions}
-        selected_commit_id = input_option(items, title=f"{prompt}\nPage:{page}\n", group2items=group2items)
+        title = f"{prompt}\nPage:{page}"
+        if many:
+            title += f"\nCommits: {[display_commit(c) for c in selected_commits]}"
+        selected_commit_id = input_option(items, title=title, group2items=group2items)
         if selected_commit_id == "next_page":
             page = page if page >= max_pages else page + 1
         elif selected_commit_id == "previous_page":
             page = page - 1 if page > 0 else 0
         elif selected_commit_id == "last_page":
             page = max_pages - 1
+        elif selected_commit_id == "finish_selection":
+            return selected_commits
         else:
-            return id2commit[selected_commit_id]
+            selected_commit = id2commit[selected_commit_id]
+            if many:
+                selected_commits.append(selected_commit)
+            else:
+                return selected_commit
     raise Exception("")
 
 
