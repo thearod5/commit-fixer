@@ -56,7 +56,7 @@ TOOLS: Dict[str, Tuple[ToolType, List[str]]] = {
 
 group2tools: Dict[str, List[str]] = {
     "Tools": ["Commit", "Search"],
-    "Safa": ["Manage Projects", "Push to Safa"],
+    "Safa": ["Push to Safa", "Manage Projects"],
     "Setting": ["Configure Project", "Configure Account"]
 }
 
@@ -128,7 +128,7 @@ def configure(config: SafaConfig) -> SafaClient:
     client = create_safa_client(config)
 
     print_title("Project Configuration")
-    run_configure_project(config, client)
+    run_push_to_safa(config, client)
 
     print("Configuration Finished.")
     return client

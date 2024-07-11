@@ -5,7 +5,7 @@ import git
 from git import Blob, Commit, Repo
 
 from safa.utils.markdown import list_formatter
-from safa.utils.menu import input_option
+from safa.utils.menu import input_confirm, input_option
 
 
 def select_commits(repo: Repo) -> List[Commit]:
@@ -21,7 +21,7 @@ def select_commits(repo: Repo) -> List[Commit]:
     elif commit_import_option == "multiple commits":
         if input_confirm(title="Import all commits?"):
             branch_name = select_branch(repo)
-            commits = [c for c in repo.iter_commits(rev=branch_name)]
+            commits = [c for c in repo.iter_commits(rev=branch_name, reverse=True)]
         else:
             commits = cast(List[Commit], input_commit(repo, many=True))
     else:
@@ -45,7 +45,7 @@ def input_commit(repo: Repo, n_commits: int = 5, prompt: str = "Select Commit", 
 
     max_pages = len(branch_commits) // n_commits
     max_pages = max_pages if len(branch_commits) % n_commits == 0 else max_pages + 1
-    id2commit = {display_commit(c): c for i, c in enumerate(branch_commits)}
+    id2commit = {commit_repr(c): c for i, c in enumerate(branch_commits)}
     commit_keys = list(id2commit.keys())
 
     running = True
@@ -63,6 +63,7 @@ def input_commit(repo: Repo, n_commits: int = 5, prompt: str = "Select Commit", 
             actions.append("first_page")
 
         if many:
+            actions.append("input_sha")
             actions.append("finish_selection")
 
         start_idx = page * n_commits
@@ -71,9 +72,9 @@ def input_commit(repo: Repo, n_commits: int = 5, prompt: str = "Select Commit", 
         items = page_commits_keys + actions
 
         group2items = {"Commit": [k for k in page_commits_keys], "Actions": actions}
-        title = f"{prompt}\nPage:{page}"
+        title = f"{prompt}\nPage:{page}/{max_pages}"
         if many:
-            title += f"\nCommits: {[display_commit(c) for c in selected_commits]}"
+            title += f"\nCommits: {[commit_repr(c) for c in selected_commits]}"
         selected_commit_id = input_option(items, title=title, group2items=group2items)
         if selected_commit_id == "next_page":
             page = page if page >= max_pages else page + 1
@@ -81,8 +82,13 @@ def input_commit(repo: Repo, n_commits: int = 5, prompt: str = "Select Commit", 
             page = page - 1 if page > 0 else 0
         elif selected_commit_id == "last_page":
             page = max_pages - 1
+        elif selected_commit_id == "input_sha":
+            inputted_commits = [repo.commit(s.strip()) for s in input("HEXSHA(s):").split(",")]
+            selected_commits.extend(inputted_commits)
         elif selected_commit_id == "finish_selection":
             return selected_commits
+        elif selected_commit_id == "first_page":
+            page = 0
         else:
             selected_commit = id2commit[selected_commit_id]
             if many:
@@ -105,25 +111,26 @@ def get_repo_commit(repo: Optional[git.Repo] = None, repo_path: Optional[str] = 
     return last_commit
 
 
-def create_commit_artifact(repo: Repo, commit: Commit) -> Dict:
+def create_commit_artifact(repo: Repo, commit: Commit, prefix: str = "") -> Dict:
     """
     Creates artifact containing commit title and changes.
     :param repo: Project repository.
     :param commit: Commit to convert to artifact.
+    :param prefix: Prefix to add to commit artifact name.
     :return: Artifact.
     """
     diff = repo.git.diff(commit.parents[0], commit) if commit.parents else "FIRST COMMIT BUG"
     commit_message = str(commit.message)
     title, changes = from_commit_message(commit_message)
     return {
-        "name": title,
+        "name": f"{prefix}{title}",
         "summary": "\n".join(changes),
         "body": diff,
         "type": "Commit"
     }
 
 
-def display_commit(c: Commit) -> str:
+def commit_repr(c: Commit) -> str:
     """
     Creates commit display.
     :param c: The commit to display.

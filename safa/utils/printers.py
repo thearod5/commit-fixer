@@ -44,7 +44,7 @@ def print_commit_response(response: Dict, keys: Optional[List[str]] = None) -> N
                 print(f"{entity_type}: {mod_type}: {n_items}")
 
 
-def version_to_string(v: Dict) -> str:
+def version_repr(v: Dict) -> str:
     """
     Converts version to its display format.
     :param v: Project Version data.

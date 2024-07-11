@@ -5,7 +5,7 @@ from safa.safa_config import SafaConfig
 from safa.tools.projects import create_new_project
 from safa.utils.commits import get_repo_commit
 from safa.utils.menu import input_confirm, input_option
-from safa.utils.printers import version_to_string
+from safa.utils.printers import version_repr
 
 
 def run_configure_account(config: SafaConfig) -> None:
@@ -18,7 +18,6 @@ def run_configure_account(config: SafaConfig) -> None:
         if input_confirm(f"Would you like to override your current account ({config.email})?", default_value="n"):
             config.clear_account()
             return run_configure_account(config)
-        print("Exiting.")
         return
 
     email = input("Safa Account Email:")
@@ -55,7 +54,6 @@ def configure_existing_project(config: SafaConfig, client: SafaClient) -> None:
         if input_confirm(title="Override version Id?"):
             config.clear_project()
             return configure_existing_project(config, client)
-        print("Exiting.")
         return
 
     # Select Project
@@ -64,7 +62,7 @@ def configure_existing_project(config: SafaConfig, client: SafaClient) -> None:
     selected_project = project_lookup_map[selected_project_name]
     # Select Version.
     versions = client.get_project_versions(selected_project["projectId"])
-    id2version = {version_to_string(v): v for v in versions}
+    id2version = {version_repr(v): v for v in versions}
     version_id_selected = input_option(list(id2version.keys()))
     selected_version = id2version[version_id_selected]
     # Select Commit
