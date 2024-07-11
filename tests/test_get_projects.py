@@ -17,7 +17,7 @@ class TestProjects(TestCase):
         Mocker.mock_get_projects(self, Mocker.DEFAULT_PROJECTS)
 
         client = SafaClient()
-        client.login(Mocker.DEFAULT_EMAIL, Mocker.DEFAULT_PASSWORD)
+        client.login(email=Mocker.DEFAULT_EMAIL, password=Mocker.DEFAULT_PASSWORD)
 
         retrieved_projects = client.get_projects()
         self.assertEqual(Mocker.DEFAULT_PROJECTS, retrieved_projects)

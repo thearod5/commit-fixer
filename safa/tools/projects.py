@@ -1,10 +1,16 @@
 import os
-from typing import Dict, List, Optional
+from typing import Dict, List
 
+import git
+
+from safa.api.client_factory import create_safa_client
 from safa.api.constants import STORE_PROJECT_KEY
 from safa.api.safa_client import SafaClient
 from safa.safa_config import SafaConfig
-from safa.utils.fs import list_paths, list_python_files, read_file
+from safa.tools.git_history import run_git_history
+from safa.utils.commits import input_commit
+from safa.utils.diffs import calculate_diff
+from safa.utils.fs import read_file
 from safa.utils.menu import input_option
 from safa.utils.printers import print_commit_response, print_title
 
@@ -16,7 +22,7 @@ def run_project_management(config: SafaConfig, client: SafaClient) -> None:
     :param client: Client used to access SAFA API.
     :return: None
     """
-    selected_option = input_option(["refresh_project", "create_project", "delete_project", "list_projects"])
+    selected_option = input_option(["refresh_project", "create_project", "delete_project", "list_projects", "import_git_history"])
     if selected_option == "refresh_project":
         refresh_project(config, client)
     elif selected_option == "create_project":
@@ -25,6 +31,8 @@ def run_project_management(config: SafaConfig, client: SafaClient) -> None:
         delete_project(client)
     elif selected_option == "list_projects":
         list_projects(client)
+    elif selected_option == "import_git_history":
+        run_git_history(config, client)
     else:
         raise Exception(f"Invalid option: {selected_option}")
 
@@ -49,35 +57,31 @@ def create_new_project(config: SafaConfig, client: SafaClient) -> None:
     :return:None
     """
     print_title("Creating New Project")
-    name = input("Name:")
-    description = input("Description:")
+    name = input("Project Name:")
+    description = input("Project Description:")
+    commit = input_commit(config.repo_path, prompt="Select commit to import project")
 
-    directories = [p for p, f in list_paths(config.repo_path) if os.path.isdir(p) and f[0] != "."]
-    selected_directories = input_option(directories, title="Select Sub-Directory (empty for root dir)", allow_many=True)
-    if len(selected_directories) > 0:
-        python_files = list_python_files(selected_directories)
-    else:
-        python_files = list_python_files(config.repo_path)
-
-    code_artifacts = files_to_artifacts(python_files, config.repo_path)
+    # Calculate changes since the start
+    repo = git.Repo(config.repo_path)
+    commit_data = calculate_diff(repo, commit)
 
     # Create project
     print("...(1) creating project...")
     project_data = client.create_project(name, description)
-    config.project_id = project_data["projectId"]
     project_version = project_data["projectVersion"]
     version_id = project_data["projectVersion"]["versionId"]
-    config.version_id = version_id
+    commit_id = commit.hexsha
+    config.set_project(project_data["projectId"], version_id, commit_id)
 
+    # Commit Entities
     print("...(2) saving entities...")
-    commit_data = create_commit_data(project_version, artifacts_added=code_artifacts)
+    commit_data = {**commit_data, "commitVersion": project_version}
     commit_response = client.commit(version_id, commit_data)
     print_commit_response(commit_response)
 
     print("...(3) starting summary job...")
-    client.summarize(version_id, )
+    client.summarize(version_id)
     print("Job has been submitted! You will get an email when its done.")
-    config.to_env()
 
 
 def delete_project(client: SafaClient) -> None:
@@ -125,31 +129,7 @@ def files_to_artifacts(file_paths: List[str], base_path: str) -> List[Dict]:
     return artifacts
 
 
-def create_commit_data(project_version: Dict,
-                       artifacts_added: Optional[List[Dict]] = None,
-                       traces_added: Optional[List[Dict]] = None) -> Dict:
-    """
-    Creates commit request with parameters filled in.
-    :param project_version: Project version to commit to.
-    :param artifacts_added: Artifacts being added in commit.
-    :param traces_added: Traces being added in commit.
-    TODO: Add other parameters as needed.
-    :return: Commit data.
-    """
-    if artifacts_added is None:
-        artifacts_added = []
-    if traces_added is None:
-        traces_added = []
-    return {
-        "commitVersion": project_version,
-        "artifacts": {
-            "added": artifacts_added,
-            "modified": [],
-            "removed": []
-        },
-        "traces": {
-            "added": traces_added,
-            "modified": [],
-            "removed": []
-        }
-    }
+if __name__ == "__main__":
+    config = SafaConfig.from_repo("~/projects/safa-cmd")
+    client = create_safa_client(config)
+    create_new_project(config, client)

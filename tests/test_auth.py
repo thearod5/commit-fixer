@@ -17,7 +17,7 @@ class TestGetProjects(TestCase):
         Mocker.mock_auth(self, Mocker.DEFAULT_EMAIL, Mocker.DEFAULT_PASSWORD, token_value=auth_token_value)
 
         client = SafaClient()
-        client.login(Mocker.DEFAULT_EMAIL, Mocker.DEFAULT_PASSWORD)
+        client.login(email=Mocker.DEFAULT_EMAIL, password=Mocker.DEFAULT_PASSWORD)
 
         # Verify cookie exists
         retrieved_auth_token_value = client.http_client.get_cookie(SAFA_AUTH_TOKEN)

@@ -3,6 +3,8 @@ from typing import Callable, Dict, List, Optional, cast
 from safa.api.constants import SAFA_AUTH_TOKEN, STORE_PROJECT_KEY
 from safa.api.http_client import HttpClient
 from safa.api.safa_store import SafaStore
+from safa.data.commits import DiffDataType
+from safa.safa_config import SafaConfig
 
 
 class SafaClient:
@@ -20,14 +22,19 @@ class SafaClient:
         self.http_client = http_client
         self.store = store
 
-    def login(self, email: str, password: str) -> None:
+    def login(self, config: Optional[SafaConfig] = None, email: Optional[str] = None, password: Optional[str] = None) -> None:
         """
         Authenticates user using SAFA credentials.
+        :param config: Safa configuration.
         :param email: SAFA account email.
         :param password: SAFA account password.
         :return: Auth token.
         """
-
+        if config is None and (email is None or password is None):
+            raise Exception("Expected config or email and password.")
+        if config:
+            email = config.email
+            password = config.password
         self.http_client.post("login", {"email": email, "password": password})
         if SAFA_AUTH_TOKEN not in self.http_client.session.cookies:
             raise Exception("Login failed, SAFA-TOKEN not found in cookies")
@@ -69,14 +76,14 @@ class SafaClient:
         response = self.http_client.get(f"projects/{project_id}/versions")
         return cast(List[Dict], response)
 
-    def commit(self, version_id: str, commit_data: Dict) -> Dict:
+    def commit(self, version_id: str, commit_data: DiffDataType) -> Dict:
         """
         Commits data to version.
         :param version_id: ID of version to save commit data to.
         :param commit_data: Contains artifacts and trace links to modify.
         :return: Commit response.
         """
-        response = self.http_client.post(f"projects/versions/{version_id}/commit", data=commit_data)
+        response = self.http_client.post(f"projects/versions/{version_id}/commit", data=commit_data)  # type:ignore
         return cast(Dict, response)
 
     def summarize(self, version_id: str):
@@ -89,9 +96,15 @@ class SafaClient:
         return cast(Dict, response)
 
     def create_version(self, project_id: str, version_type: str) -> Dict:
+        """
+        Creates new project version.
+        :param project_id: ID of project.
+        :param version_type: Type of version to create (e.g. major.minor.revision)
+        :return: Project version dict.
+        """
         assert version_type in ["revision", "major", "minor"]
         project_version = self.http_client.post(f"projects/{project_id}/versions/{version_type}")
-        return project_version
+        return cast(Dict, project_version)
 
     def get_or_store(self, entity_type: str, entity_id: str, get_lambda: Callable, use_store: bool = True) -> Dict:
         """

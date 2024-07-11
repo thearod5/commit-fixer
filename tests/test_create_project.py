@@ -18,6 +18,6 @@ class TestCreateProject(TestCase):
         Mocker.mock_auth(self, Mocker.DEFAULT_EMAIL, Mocker.DEFAULT_PASSWORD)
         Mocker.mock_create_project(self, project_data)
 
-        client.login(Mocker.DEFAULT_EMAIL, Mocker.DEFAULT_PASSWORD)
+        client.login(email=Mocker.DEFAULT_EMAIL, password=Mocker.DEFAULT_PASSWORD)
         project_response = client.create_project(project_name, project_description)
         self.assertEqual(project_data, project_response)

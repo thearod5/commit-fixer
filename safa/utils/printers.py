@@ -42,3 +42,12 @@ def print_commit_response(response: Dict, keys: Optional[List[str]] = None) -> N
             n_items = len(mod_items)
             if n_items > 0:
                 print(f"{entity_type}: {mod_type}: {n_items}")
+
+
+def version_to_string(v: Dict) -> str:
+    """
+    Converts version to its display format.
+    :param v: Project Version data.
+    :return: Display string.
+    """
+    return f"{v['majorVersion']}.{v['minorVersion']}.{v['revision']}"

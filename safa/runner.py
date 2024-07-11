@@ -4,9 +4,8 @@ from typing import Callable, Dict, List, Tuple
 
 from dotenv import load_dotenv
 
-from safa.api.http_client import HttpClient
+from safa.api.client_factory import create_safa_client
 from safa.api.safa_client import SafaClient
-from safa.api.safa_store import SafaStore
 from safa.tools.search import run_search
 from safa.utils.fs import clean_path, write_json
 from safa.utils.printers import print_title
@@ -53,7 +52,7 @@ TOOLS: Dict[str, Tuple[ToolType, List[str]]] = {
     "Configure Account": (run_configure_account, ["*"]),
 }
 
-tool2group = {
+group2tools: Dict[str, List[str]] = {
     "Tool": ["Commit", "Search"],
     "Setting": ["Manage Projects", "Configure Project", "Configure Account"]
 }
@@ -85,27 +84,9 @@ def main() -> None:
     while running:
         filtered_tools = filter_tools_by_permissions(TOOLS, config_permissions)
         menu_keys = list(filtered_tools.keys())
-        option_selected = input_option(menu_keys, title="Tools", group2items=tool2group)
+        option_selected = input_option(menu_keys, title="Tools", group2items=group2tools)
         tool_func, tool_permissions = TOOLS[option_selected]
         tool_func(config, client)
-
-
-def create_safa_client(config: SafaConfig) -> SafaClient:
-    """
-    Creates SAFA client pointing at safa api. Can be overridden with BASE_URL.
-    :param config: SAFA account and project configuration.
-    :return: Safa Client created.
-    """
-    base_url = os.environ.get("BASE_URL", "https://api.safa.ai")
-    global_parameters = {"verify": False} if "localhost" in base_url else {}
-    http_client = HttpClient(base_url, global_parameters=global_parameters)
-    store = SafaStore(cache_file_path=config.cache_file_path)
-    client = SafaClient(store, http_client=http_client)
-    if config.email is None:
-        print("Account email was not found.")
-        run_configure_account(config)
-    client.login(config.email, config.password)
-    return client
 
 
 configure_message_template = (
@@ -122,17 +103,17 @@ To configure your SAFA project, we are going to create the following
 def configure(config: SafaConfig) -> SafaClient:
     print(f"\nRepository Root: {config.repo_path}\n")
     if not os.path.isdir(config.config_path):
-        if input_confirm("Is this the root of your repository?"):
+        if input_confirm("Is this the root of your repository?", default_value="y"):
             os.makedirs(config.config_path, exist_ok=True)
         else:
             print(usage_msg)
             sys.exit(-1)
 
     configure_message = configure_message_template.format(config.repo_path)
-    print_title("Welcome to your new project.")
+    print_title("Safa Configuration")
     print(configure_message)
 
-    if not input_confirm("Do you want to continue configuration?", default_value="y"):
+    if not input_confirm("Continue?", default_value="y"):
         print("Okay :)")
         sys.exit(-1)
 

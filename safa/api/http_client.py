@@ -26,7 +26,7 @@ class HttpClient:
         """
         return self._request("GET", endpoint, params=params)
 
-    def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None, **kwargs) -> Any:
+    def post(self, endpoint: str, data: Optional[Dict] = None, **kwargs) -> Any:
         """
         Performs POST request to endpoint.
         :param endpoint: Relative path to endpoint from base url.

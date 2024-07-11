@@ -1,0 +1,159 @@
+from datetime import datetime
+from typing import Dict, List, Optional, Tuple, cast
+
+import git
+from git import Blob, Commit, Repo
+
+from safa.utils.markdown import list_formatter
+from safa.utils.menu import input_option
+
+
+def input_commit(repo_path: str, n_commits: int = 5, prompt: str = "Select Commit") -> Commit:
+    """
+    Prompts user to select commit.
+    :param repo_path: Path to repository to select commit from.
+    :param n_commits: The number of commits to display.
+    :param prompt: The title to prompt user with.
+    :return: Commit selected.
+    """
+
+    page = 0
+    repo = git.Repo(repo_path)
+    branch_name = select_branch(repo)
+    branch_commits = [c for c in repo.iter_commits(rev=branch_name)]
+
+    max_pages = len(branch_commits) // n_commits
+    max_pages = max_pages if len(branch_commits) % n_commits == 0 else max_pages + 1
+    id2commit = {display_commit(c): c for i, c in enumerate(branch_commits)}
+    commit_keys = list(id2commit.keys())
+
+    running = True
+    while running:
+        actions = []
+        if page < max_pages - 1:
+            actions.append("next_page")
+        if page > 0:
+            actions.append("previous_page")
+        if page < max_pages - 1:
+            actions.append("last_page")
+        if page > 0:
+            actions.append("first_page")
+
+        start_idx = page * n_commits
+        end_idx = start_idx + n_commits
+        page_commits_keys = commit_keys[start_idx: end_idx]
+        items = page_commits_keys + actions
+
+        group2items = {"Commit": [k for k in page_commits_keys], "Actions": actions}
+        selected_commit_id = input_option(items, title=f"{prompt}\nPage:{page}\n", group2items=group2items)
+        if selected_commit_id == "next_page":
+            page = page if page >= max_pages else page + 1
+        elif selected_commit_id == "previous_page":
+            page = page - 1 if page > 0 else 0
+        elif selected_commit_id == "last_page":
+            page = max_pages - 1
+        else:
+            return id2commit[selected_commit_id]
+    raise Exception("")
+
+
+def get_repo_commit(repo: Optional[git.Repo] = None, repo_path: Optional[str] = None) -> Commit:
+    """
+    Returns the last commit at given repo.
+    :param repo: Repository to pull commits.
+    :param repo_path: Path to load repository from.
+    :return: Commit.
+    """
+    if repo is None:
+        repo = git.Repo(repo_path)
+    last_commit = repo.head.commit
+    return last_commit
+
+
+def create_commit_artifact(repo: Repo, commit: Commit) -> Dict:
+    """
+    Creates artifact containing commit title and changes.
+    :param repo: Project repository.
+    :param commit: Commit to convert to artifact.
+    :return: Artifact.
+    """
+    diff = repo.git.diff(commit.parents[0], commit) if commit.parents else "FIRST COMMIT BUG"
+    commit_message = str(commit.message)
+    title, changes = from_commit_message(commit_message)
+    return {
+        "name": title,
+        "summary": "\n".join(changes),
+        "body": diff,
+        "type": "Commit"
+    }
+
+
+def display_commit(c: Commit) -> str:
+    """
+    Creates commit display.
+    :param c: The commit to display.
+    :return: String to display commit
+    """
+    title, changes = from_commit_message(c.message)
+    commit_date = datetime.fromtimestamp(c.committed_date).strftime('%m-%d-%Y %H:%M')
+    return f"{commit_date}:{title.strip()}"
+
+
+def print_commit_message(title, changes, **kwargs) -> None:
+    """
+    Prints commit message to console.
+    :param title: Title of the message.
+    :param changes: The changes in the commit.
+    :return: None
+    """
+    print(to_commit_message(title, changes, **kwargs))
+
+
+def to_commit_message(title: str, changes: List[str], **kwargs) -> str:
+    """
+    Creates commit message with title and list of changes.
+    :param title: Title of commit.
+    :param changes: List of changes in commit.
+    :return: Commit message.
+    """
+    return f"{title}\n\n{list_formatter(changes, **kwargs)}"
+
+
+def from_commit_message(msg: str | bytes) -> Tuple[str, List[str]]:
+    """
+    Deconstructs commit message into title and list of changes.
+    :param msg: Formatted commit message.
+    :return: Tuple of title and list of changes.
+    """
+    if isinstance(msg, bytes):
+        msg = str(msg)
+    if "\n\n" not in msg:
+        return msg, []
+
+    title, change_msg = msg.split("\n\n")
+    change_msg = cast(str, change_msg)
+    changes = [c.strip() for c in change_msg.split("\n")]
+    return title.strip(), changes
+
+
+def select_branch(repo: git.Repo) -> str:
+    """
+    Prompts user to select a branch name from the repo.
+    :param repo: Repository to pull branches from.
+    :return: The branch name.
+    """
+    branches = [branch.name for branch in repo.branches]  # type: ignore
+    branch_name = input_option(branches, title="Select branch name")
+    return cast(str, branch_name)
+
+
+def decode_blob(blob: Optional[Blob] = None) -> str:
+    """
+    Decodes blob to string.
+    :param blob: The blob to decode.
+    :return: String.
+    """
+    if blob is None:
+        raise Exception("Expected blob to exist")
+    blob_str = blob.data_stream.read().decode("utf-8")
+    return cast(str, blob_str)

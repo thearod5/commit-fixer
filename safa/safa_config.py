@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
 
 from dotenv import load_dotenv
 
@@ -27,11 +27,116 @@ class SafaConfig:
     env_file_path: str
     vector_store_path: str
     cache_file_path: str
-    # user defined
+    # Account Settings
     email: Optional[str]
     password: Optional[str]
+    # Project Settings
     project_id: Optional[str]
     version_id: Optional[str]
+    commit_id: Optional[str]
+    # Property references
+    env_properties = ["repo_path", "email", "password", "project_id", "version_id", "commit_id"]
+    repr_properties = ["repo_path", "email", "project_id", "version_id", "commit_id"]
+    is_configured_paths = ["env_file_path", "cache_file_path"]
+    is_configured_properties = ["repo_path", "email", "password", "project_id", "version_id", "commit_id"]
+
+    def __repr__(self) -> str:
+        """
+        :return: string representation of the configuration.
+        """
+        config_items = {k.replace("_", " ").title(): getattr(self, k) for k in self.repr_properties}
+        item_display = [f"{k}={v}" for k, v in config_items.items()]
+        return "\n".join(item_display)
+
+    def clear_account(self) -> None:
+        """
+        Removes account settings details and saves configuration.
+        :return: None
+        """
+        self.set_account(None, None)
+        self.__to_env()
+
+    def clear_project(self) -> None:
+        """
+        Removes project settings details and saves configuration.
+        :return: None
+        """
+        self.set_project(None, None, None)
+        self.__to_env()
+
+    def set_account(self, email: Optional[str], password: Optional[str]):
+        """
+        Sets default account.
+        :param email: SAFA account email.
+        :param password: SAFA account password
+        :return: None
+        """
+        self.email = email
+        self.password = password
+        self.__to_env()
+
+    def set_project(self, project_id: Optional[str], version_id: Optional[str], commit_id: Optional[str]):
+        """
+        Sets default project in configuration.
+        :param project_id: ID of project.
+        :param version_id: ID of project version.
+        :param commit_id: Commit hexsha associated with project version.
+        :return: None
+        """
+        self.project_id = project_id
+        self.version_id = version_id
+        self.commit_id = commit_id
+        self.__to_env()
+
+    def is_configured(self) -> bool:
+        """
+        Whether all necessary SAFA variables are configured.
+        :return: Whether config contains necessary information.
+        """
+        paths_configured = all([os.path.exists(getattr(self, p)) for p in self.is_configured_paths])
+        properties_configured = all([getattr(self, p) is not None for p in self.is_configured_properties])
+        return paths_configured and properties_configured
+
+    def get_version_id(self) -> str:
+        """
+        Returns version id if exists, otherwise error is thrown.
+        :return: Configured version ID.
+        """
+        if self.version_id:
+            return self.version_id
+        raise Exception("Project version is not configured.")
+
+    def has_version_id(self) -> bool:
+        """
+        :return: Returns whether version ID is configured.
+        """
+        return self.version_id is not None
+
+    def has_account(self) -> bool:
+        """
+        :return: Whether configuration has account details.
+        """
+        return self.email is not None and self.password is not None
+
+    def get_project_config(self) -> Tuple[str, str, str]:
+        """
+        :return: Returns project details.
+        """
+        return self.project_id, self.version_id, self.commit_id
+
+    def __to_env(self):
+        """
+        Converts config to env file.
+        :return: None
+        """
+        property2value = {k: getattr(self, k) for k in self.env_properties}
+        env_line_items = [
+            f"SAFA_{k.upper()}={getattr(self, k)}"
+            for k, v in property2value.items() if v is not None
+        ]
+        env_content = "\n".join(env_line_items)
+        write_file_content(self.env_file_path, env_content)
+        print(f"Configuration file written to {self.env_file_path}")
 
     @staticmethod
     def from_repo(repo_path: str, root_env_file_path: Optional[str] = None) -> "SafaConfig":
@@ -58,66 +163,16 @@ class SafaConfig:
         load_dotenv(root_env_file_path)
 
         return SafaConfig(
-            # User Paths
             repo_path=repo_path,
-            email=os.environ.get("SAFA_EMAIL"),
-            password=os.environ.get("SAFA_PASSWORD"),
-            project_id=os.environ.get("SAFA_PROJECT_ID"),
-            version_id=os.environ.get("SAFA_VERSION_ID"),
             # Config paths
             config_path=config_path,
             env_file_path=env_file_path,
             cache_file_path=cache_file_path,
-            vector_store_path=vector_store_path
+            vector_store_path=vector_store_path,
+            # User Paths
+            email=os.environ.get("SAFA_EMAIL"),
+            password=os.environ.get("SAFA_PASSWORD"),
+            project_id=os.environ.get("SAFA_PROJECT_ID"),
+            version_id=os.environ.get("SAFA_VERSION_ID"),
+            commit_id=os.environ.get("SAFA_COMMIT_ID"),
         )
-
-    def to_env(self):
-        """
-        Converts config to env file.
-        :return: None
-        """
-        vars_to_store = ["repo_path", "email", "password", "project_id", "version_id", "cache_file_path"]
-
-        env_line_items = [
-            f"SAFA_{k.upper()}={getattr(self, k)}"
-            for k in vars_to_store
-        ]
-        env_content = "\n".join(env_line_items)
-        write_file_content(self.env_file_path, env_content)
-        print(f"Configuration file written to {self.env_file_path}")
-
-    def is_configured(self) -> bool:
-        """
-        Whether all necessary SAFA variables are configured.
-        :return: Whether config contains necessary information.
-        """
-        return (
-                os.path.exists(self.env_file_path) and
-                os.path.exists(self.cache_file_path) and
-                self.email and
-                self.password and
-                self.project_id and
-                self.version_id
-        )
-
-    def get_version_id(self) -> str:
-        """
-        Returns version id if exists, otherwise error is thrown.
-        :return: Configured version ID.
-        """
-        if self.version_id:
-            return self.version_id
-        raise Exception("Project version is not configured.")
-
-    def __repr__(self) -> str:
-        """
-        :return: string representation of the configuration.
-        """
-        config_items = {
-            "Repository": self.repo_path,
-            "Account": self.email,
-            "Project ID": self.project_id,
-            "Version ID": self.version_id
-        }
-        item_display = [f"{k}={v}" for k, v in config_items.items()]
-        return "\n".join(item_display)
