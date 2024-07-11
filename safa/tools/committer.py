@@ -11,7 +11,7 @@ from safa.utils.diff_summary import generate_summary
 from safa.utils.diffs import calculate_diff
 from safa.utils.git_helpers import get_file_content_before, get_staged_diffs, stage_files
 from safa.utils.menu import input_confirm, input_option
-from safa.utils.printers import print_title
+from safa.utils.printers import print_title, version_repr
 
 
 def run_committer(config: SafaConfig, client: SafaClient) -> None:
@@ -43,7 +43,7 @@ def run_committer(config: SafaConfig, client: SafaClient) -> None:
         config.version_id = new_version_id
         commit = get_repo_commit(repo)
         s_commit = repo.commit(config.commit_id) if config.commit_id else None
-        commit_data = calculate_diff(repo, commit, starting_commit=s_commit)
+        commit_data = calculate_diff(repo, commit, starting_commit=s_commit, prefix=f"{version_repr(project_version)}")
         client.commit(new_version_id, commit_data)
         config.set_project(config.project_id, new_version_id, commit.hexsha)
         print(f"Commit finished! See project @ https://app.safa.ai/project?version={new_version_id}")
