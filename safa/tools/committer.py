@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import git
 
@@ -31,8 +31,8 @@ def run_committer(config: SafaConfig, client: SafaClient) -> None:
     if len(file2diff) == 0:
         print("No changes staged for commit.")
     else:
-        changes = create_file_changes(file2diff, artifact_map, repo)
-        title, changes = generate_summary(changes, project_data["specification"])
+        file_changes = create_file_changes(file2diff, artifact_map, repo)
+        title, changes = generate_summary(file_changes, project_data["specification"])
         run_commit_menu(repo, title, changes)
 
     if input_confirm("Import commit to SAFA project?", default_value="y"):
@@ -43,7 +43,7 @@ def run_committer(config: SafaConfig, client: SafaClient) -> None:
         config.version_id = new_version_id
         commit = get_repo_commit(repo)
         s_commit = repo.commit(config.commit_id) if config.commit_id else None
-        commit_data = calculate_diff(repo, commit, starting_commit=s_commit, prefix=f"{version_repr(project_version)}")
+        commit_data = calculate_diff(repo, commit, starting_commit=s_commit, prefix=f"{version_repr(project_version)}: ")
         client.commit(new_version_id, commit_data)
         config.set_project(config.project_id, new_version_id, commit.hexsha)
         print(f"Commit finished! See project @ https://app.safa.ai/project?version={new_version_id}")
@@ -91,13 +91,13 @@ def create_file_changes(file2diff, artifact_map: Dict[str, ArtifactJson], repo) 
     """
     changes: List[FileChange] = []
     for file, diff in file2diff.items():
-        file_artifact = artifact_map.get(file, None)
+        file_artifact: Optional[ArtifactJson] = artifact_map.get(file, None)
         content_before = get_file_content_before(repo, file)
         changes.append(FileChange(
             file=file,
             diff=diff,
             content_before=content_before,
-            summary=file_artifact["summary"] if file_artifact else None
+            summary=file_artifact["summary"] if file_artifact else None  # type: ignore
         ))
     return changes
 

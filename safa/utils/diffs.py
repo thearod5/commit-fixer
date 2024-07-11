@@ -33,7 +33,9 @@ def calculate_diff(repo: git.Repo, commit: Commit, starting_commit: Optional[Com
     traces = [{
         "sourceName": a["name"],
         "targetName": commit_artifact["name"]
-    } for mod_type, artifacts in artifact_delta.items() for a in artifacts if not BUG_FIX_FLAG or mod_type != "removed"]
+    } for mod_type, artifacts in artifact_delta.items()
+        for a in artifacts if not BUG_FIX_FLAG or mod_type != "removed"]  # type: ignore
+
     artifact_delta["added"].append(commit_artifact)
     commit_data: DiffDataType = {
         "artifacts": artifact_delta,

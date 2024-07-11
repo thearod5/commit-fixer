@@ -8,7 +8,7 @@ class ArtifactJson(TypedDict):
     attributes: Dict
 
 
-def create_artifact(name: Optional[str], type: Optional[str], body: Optional[str] = None, summary: str = None) -> Dict:
+def create_artifact(name: Optional[str], type: Optional[str], body: Optional[str] = None, summary: Optional[str] = None) -> Dict:
     """
     Creates artifact dictionary.
     :param name: Name of the artifact

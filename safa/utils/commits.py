@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, cast
 
@@ -17,7 +18,7 @@ def select_commits(repo: Repo) -> List[Commit]:
     commit_import_options = ["single commit", "multiple commits"]
     commit_import_option = input_option(commit_import_options)
     if commit_import_option == "single commit":
-        commits = [input_commit(repo, many=False)]
+        commits: List[Commit] = [cast(Commit, input_commit(repo, many=False))]
     elif commit_import_option == "multiple commits":
         if input_confirm(title="Import all commits?"):
             branch_name = select_branch(repo)
@@ -49,7 +50,7 @@ def input_commit(repo: Repo, n_commits: int = 5, prompt: str = "Select Commit", 
     commit_keys = list(id2commit.keys())
 
     running = True
-    selected_commits = []
+    selected_commits: List[Commit] = []
     while running:
         actions = []
 
@@ -172,7 +173,12 @@ def from_commit_message(msg: str | bytes) -> Tuple[str, List[str]]:
     if "\n\n" not in msg:
         return msg, []
 
-    title, change_msg = msg.split("\n\n")
+    try:
+        title, change_msg = msg.split("\n\n")
+    except Exception as e:
+        traceback.print_exc()
+        print("MSG::")
+        print(msg)
     change_msg = cast(str, change_msg)
     changes = [c.strip() for c in change_msg.split("\n")]
     return title.strip(), changes

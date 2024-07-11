@@ -1,27 +1,18 @@
 import os
-from abc import ABC, abstractmethod
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, Tuple, Union
 
 from langchain_anthropic import ChatAnthropic
-from langchain_community.llms import OpenAI
-from langchain_core.messages import BaseMessage
 
 MessageType = Tuple[str, str]
 
+LLMManager = Union[ChatAnthropic]
 
-class LLMManager(ABC):
-    @abstractmethod
-    def invoke(self, messages: List[MessageType]) -> BaseMessage:
-        pass
-
-
-ALLOWED_MANAGERS: Dict[str, Callable[[str], LLMManager]] = {
-    "anthropic": lambda k: ChatAnthropic(anthropic_api_key=k, model_name='claude-3-sonnet-20240229', max_tokens=4096),
-    "openai": lambda k: OpenAI(openai_api_key=k)
+ALLOWED_MANAGERS: Dict[str, Callable[[str], ChatAnthropic]] = {
+    "anthropic": lambda k: ChatAnthropic(api_key=k, model_name='claude-3-sonnet-20240229', max_tokens=4096)  # type: ignore
 }
 
 
-def get_llm_manager() -> LLMManager:
+def get_llm_manager() -> ChatAnthropic:
     """
     Reads LLM manager from env variables.
     :return: LLM Manager

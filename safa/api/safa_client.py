@@ -76,7 +76,7 @@ class SafaClient:
         response = self.http_client.get(f"projects/{project_id}/versions")
         return cast(List[Dict], response)
 
-    def commit(self, version_id: str, commit_data: DiffDataType) -> Dict:
+    def commit(self, version_id: str, commit_data: DiffDataType) -> DiffDataType:
         """
         Commits data to version.
         :param version_id: ID of version to save commit data to.
@@ -84,7 +84,7 @@ class SafaClient:
         :return: Commit response.
         """
         response = self.http_client.post(f"projects/versions/{version_id}/commit", data=commit_data)  # type:ignore
-        return cast(Dict, response)
+        return cast(DiffDataType, response)
 
     def summarize(self, version_id: str):
         """

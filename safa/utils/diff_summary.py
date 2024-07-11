@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, cast
 
 from safa.data.file_change import FileChange
 from safa.utils.llm_manager import get_llm_manager
@@ -46,7 +46,7 @@ def generate_summary(file_changes: List[FileChange], project_summary: str) -> Tu
     ]
     print("...generating...")
     llm_manager = get_llm_manager()
-    response = llm_manager.invoke(messages).content
+    response = cast(str, llm_manager.invoke(messages).content)
     response_json = parse_json(response)
     diff_summaries = response_json["changes"]
     title = response_json["title"]
@@ -72,7 +72,7 @@ def create_change_prompt(changes: List[FileChange], delimiter="\n\n") -> str:
         change_prompt = delimiter.join(change_prompts)
         prompts.append(change_prompt)
 
-    return delimiter.join(prompts)
+    return cast(str, delimiter.join(prompts))
 
 
 def parse_json(response: str) -> Dict:
@@ -85,7 +85,7 @@ def parse_json(response: str) -> Dict:
     end_index = response.find("```", start_index + 1)
     json_str = response[start_index + 7:end_index]
     try:
-        return json.loads(json_str)
+        return cast(Dict, json.loads(json_str))
     except Exception as e:
         print(response)
         raise e

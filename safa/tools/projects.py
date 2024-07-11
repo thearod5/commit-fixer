@@ -1,40 +1,20 @@
 import os
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 
 import git
+from git import Commit, Repo
+from tqdm import tqdm
 
-from safa.api.client_factory import create_safa_client
 from safa.api.constants import STORE_PROJECT_KEY
 from safa.api.safa_client import SafaClient
+from safa.constants import EMPTY_TREE_HEXSHA
 from safa.safa_config import SafaConfig
-from safa.tools.push_to_safa import run_push_to_safa
-from safa.utils.commits import input_commit
+from safa.utils.commit_store import CommitStore
+from safa.utils.commits import select_commits
 from safa.utils.diffs import calculate_diff
 from safa.utils.fs import read_file
-from safa.utils.menu import input_option
-from safa.utils.printers import print_commit_response, print_title
-
-
-def run_project_management(config: SafaConfig, client: SafaClient) -> None:
-    """
-    Allows user to create, delete, or list projects.
-    :param config: Account and repository configuration.
-    :param client: Client used to access SAFA API.
-    :return: None
-    """
-    selected_option = input_option(["refresh_project", "create_project", "delete_project", "list_projects", "import_git_history"])
-    if selected_option == "refresh_project":
-        refresh_project(config, client)
-    elif selected_option == "create_project":
-        create_new_project(config, client)
-    elif selected_option == "delete_project":
-        delete_project(client)
-    elif selected_option == "list_projects":
-        list_projects(client)
-    elif selected_option == "import_git_history":
-        run_push_to_safa(config, client)
-    else:
-        raise Exception(f"Invalid option: {selected_option}")
+from safa.utils.menu import input_confirm, input_option
+from safa.utils.printers import version_repr
 
 
 def refresh_project(config: SafaConfig, client: SafaClient) -> None:
@@ -49,45 +29,10 @@ def refresh_project(config: SafaConfig, client: SafaClient) -> None:
     client.get_version(version_id)
 
 
-def create_new_project(config: SafaConfig, client: SafaClient) -> None:
-    """
-    Creates a new project, uploads code, and starts HGEN documentation.
-    :param config: Configuration details.
-    :param client: Client used to create project with.
-    :return:None
-    """
-    print_title("Creating New Project")
-    name = input("Project Name:")
-    description = input("Project Description:")
-    repo = git.Repo(config.repo_path)
-    commit = input_commit(repo, prompt="Select commit to import project")
-
-    # Calculate changes since the start
-    repo = git.Repo(config.repo_path)
-    commit_data = calculate_diff(repo, commit)
-
-    # Create project
-    print("...(1) creating project...")
-    project_data = client.create_project(name, description)
-    project_version = project_data["projectVersion"]
-    version_id = project_data["projectVersion"]["versionId"]
-    commit_id = commit.hexsha
-    config.set_project(project_data["projectId"], version_id, commit_id)
-
-    # Commit Entities
-    print("...(2) saving entities...")
-    commit_data = {**commit_data, "commitVersion": project_version}
-    commit_response = client.commit(version_id, commit_data)
-    print_commit_response(commit_response)
-
-    print("...(3) starting summary job...")
-    client.summarize(version_id)
-    print("Job has been submitted! You will get an email when its done.")
-
-
-def delete_project(client: SafaClient) -> None:
+def delete_project(config: SafaConfig, client: SafaClient) -> None:
     """
     Deletes safa project.
+    :param config: Safa account and project configuration.
     :param client: Client used to delete project.
     :return: None
     """
@@ -96,13 +41,17 @@ def delete_project(client: SafaClient) -> None:
 
     project_name = input_option(list(project_lookup_map.keys()))
     selected_project = project_lookup_map[project_name]
+    project_id = selected_project['projectId']
     client.delete_project(selected_project['projectId'])
+    if project_id == config.project_id:
+        config.clear_project()
     print("Project Deleted:", selected_project["name"])
 
 
-def list_projects(client: SafaClient) -> None:
+def list_projects(config: SafaConfig, client: SafaClient) -> None:
     """
     Lists SAFA projects accessible to user.
+    :param config: Safa account and project configuration.
     :param client: The client used to retrieve projects.
     :return: None
     """
@@ -130,7 +79,57 @@ def files_to_artifacts(file_paths: List[str], base_path: str) -> List[Dict]:
     return artifacts
 
 
-if __name__ == "__main__":
-    config = SafaConfig.from_repo("~/projects/safa-cmd")
-    client = create_safa_client(config)
-    create_new_project(config, client)
+def run_push_project(config: SafaConfig, client: SafaClient):
+    """
+    Runs through git history and creates commits in SAFA.
+    :param config: Configuration object containing repository path and other settings.
+    :param client: SAFA client to interact with SAFA API.
+    :return: None
+    """
+    repo = git.Repo(config.repo_path)
+    project_id, version_id, s_commit = _select_project(config, client, repo)
+    commits = select_commits(repo)
+
+    store = CommitStore()
+
+    for i, commit in tqdm(list(enumerate(commits))):
+        # create new version
+        project_version = client.create_version(project_id, "revision")
+
+        # Create commit data
+        commit_data = calculate_diff(repo, commit, starting_commit=s_commit, prefix=f"{version_repr(project_version)}: ")
+        store.update_request(commit_data)
+        commit_response = client.commit(project_version["versionId"], commit_data)
+        store.process_response(commit_response)
+        s_commit = commit
+
+        is_last_commit = i == len(commits) - 1
+
+        if is_last_commit:
+            last_commit_version_id = project_version["versionId"]
+            if input_confirm("Set as current project?"):
+                config.set_project(project_id, last_commit_version_id, commit.hexsha)
+            if input_confirm("Run summarization job?"):
+                client.summarize(last_commit_version_id)
+
+
+def _select_project(config: SafaConfig, client: SafaClient, repo: Repo) -> Tuple[str, str, Optional[Commit]]:
+    """
+    Prompts user to select a project or create one.
+    :param config: SAFA account and project configuration.
+    :param client: Client used to access SAFA API.
+    :param repo: Repository associated with project to import.
+    :return: project id , version id , commit id
+    """
+    s_commit = None
+    if config.project_id and input_confirm("Use current project?"):
+        project_id, version_id, commit_id = config.get_project_config()
+        s_commit = repo.commit(commit_id)
+    else:
+        project_name = input("Project name:")
+        project_description = input("Project description:")
+        project = client.create_project(project_name, project_description)
+        project_id = project["projectId"]
+        version_id = project["projectVersion"]["versionId"]
+        config.set_project(project_id, version_id, EMPTY_TREE_HEXSHA)
+    return project_id, version_id, s_commit

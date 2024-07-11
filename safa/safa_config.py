@@ -122,7 +122,9 @@ class SafaConfig:
         """
         :return: Returns project details.
         """
-        return self.project_id, self.version_id, self.commit_id
+        if self.project_id is None or self.version_id is None or self.commit_id:
+            raise Exception("One of project_id, version_id, or commit_id is None.")
+        return self.project_id, self.version_id, self.commit_id  # type: ignore
 
     def __to_env(self):
         """

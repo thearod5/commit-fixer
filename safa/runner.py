@@ -1,12 +1,13 @@
+import argparse
 import os
 import sys
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Optional
 
 from dotenv import load_dotenv
 
 from safa.api.client_factory import create_safa_client
 from safa.api.safa_client import SafaClient
-from safa.tools.push_to_safa import run_push_to_safa
+from safa.tools.projects import delete_project, list_projects, refresh_project, run_push_project
 from safa.tools.search import run_search
 from safa.utils.fs import clean_path, write_json
 from safa.utils.printers import print_title
@@ -15,10 +16,9 @@ SRC_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 print("SRS", SRC_PATH)
 sys.path.append(SRC_PATH)
 
-from safa.tools.projects import run_project_management
 from safa.safa_config import SafaConfig
 from safa.tools.committer import run_committer
-from safa.tools.configure import run_configure_account, run_configure_project
+from safa.tools.configure import run_configure_account
 from safa.utils.menu import input_confirm, input_option
 
 safa_banner = (
@@ -44,32 +44,43 @@ usage_msg = (
         ```Usage: $ safa [REPO_PATH] [ENV_FILE_PATH]```
     """
 )
+TOOLS = {
+    "committer": (run_committer, ["project"]),
+    "search": (run_search, ["project"]),
+    "push_project": (run_push_project, ["user"]),
+    "refresh_project": (refresh_project, ["user"]),
+    "delete_project": (delete_project, ["user"]),
+    "list_projects": (list_projects, ["user"]),
+    "account": (run_configure_account, ["*"])
+
+}
 ToolType = Callable[[SafaConfig, SafaClient], None]
-TOOLS: Dict[str, Tuple[ToolType, List[str]]] = {
-    "Commit": (run_committer, ["project"]),
-    "Search": (run_search, ["project"]),
-    "Push to Safa": (run_push_to_safa, ["user"]),
-    "Manage Projects": (run_project_management, ["project"]),
-    "Configure Project": (run_configure_project, ["user"]),
-    "Configure Account": (run_configure_account, ["*"]),
+tool_options = {
+    "committer": "Commit Changes",
+    "search": "Search",
+    "push_project": "Push",
+    "refresh_project": "Refresh",
+    "delete_project": "Delete",
+    "list_projects": "List",
+    "account": "Configure"
+}
+group2tools = {
+    "Tools": [
+        "committer",
+        "search"
+    ],
+    "Projects": ["push_project", "delete_project", "list_projects", "refresh_project"],
+    "Account": ["account"]
 }
 
-group2tools: Dict[str, List[str]] = {
-    "Tools": ["Commit", "Search"],
-    "Safa": ["Push to Safa", "Manage Projects"],
-    "Setting": ["Configure Project", "Configure Account"]
-}
 
-
-def main() -> None:
+def main(repo_path: str, env_file_path: Optional[str] = None, tool: Optional[str] = None) -> None:
     """
     Allows users to run tools.
     :return: None
     """
     print("\n", safa_banner.strip(), "\n\n")
 
-    repo_path = clean_path(sys.argv[1]) if len(sys.argv) >= 2 else os.path.abspath("")
-    env_file_path = sys.argv[2] if len(sys.argv) >= 3 else None
     config = SafaConfig.from_repo(repo_path, root_env_file_path=env_file_path)
 
     if config.is_configured():
@@ -86,8 +97,10 @@ def main() -> None:
     running = True
     while running:
         filtered_tools = filter_tools_by_permissions(TOOLS, config_permissions)
-        menu_keys = list(filtered_tools.keys())
-        option_selected = input_option(menu_keys, title="Tools", group2items=group2tools)
+        if not tool:
+            option_selected = input_option(tool_options, title="Command", groups=group2tools)
+        else:
+            option_selected = tool
         tool_func, tool_permissions = TOOLS[option_selected]
         tool_func(config, client)
 
@@ -128,7 +141,7 @@ def configure(config: SafaConfig) -> SafaClient:
     client = create_safa_client(config)
 
     print_title("Project Configuration")
-    run_push_to_safa(config, client)
+    run_push_project(config, client)
 
     print("Configuration Finished.")
     return client
@@ -181,5 +194,19 @@ def filter_tools_by_permissions(tool_set: Dict, permissions: List[str]) -> Dict:
     return filtered_tools
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="A tool for processing repositories.")
+    parser.add_argument('--tool', '-t', type=str, help="Specify the tool to use")
+    parser.add_argument('--repo_path', '-r', type=str, help="Path to the repository directory")
+    parser.add_argument('--env', '-e', type=str, help="Path to the environment file")
+
+    args = parser.parse_args()
+
+    repo_path = clean_path(args.repo_path) if args.repo_path else os.path.abspath("")
+    env_file_path = clean_path(args.env) if args.env else None
+
+    return repo_path, env_file_path, args.tool
+
+
 if __name__ == "__main__":
-    main()
+    main(*parse_args())

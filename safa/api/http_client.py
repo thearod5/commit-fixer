@@ -75,7 +75,8 @@ class HttpClient:
         :return: JSON response to request.
         """
         url = f"{self.base_url}/{endpoint_rel_path}"
-        response = self.session.request(method, url, headers=self.headers, **self.global_parameters, **kwargs)
+        kwargs.update(**self.global_parameters)
+        response = self.session.request(method, url, headers=self.headers, **kwargs)
 
         try:
             response.raise_for_status()
