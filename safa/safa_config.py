@@ -7,9 +7,10 @@ from dotenv import load_dotenv
 from safa.utils.fs import clean_path, write_file_content
 
 CONFIG_FOLDER = ".safa"
-ENV_FILE = ".env"
+PROJECT_ENV_FILE = "project.env"
+USER_ENV_FILE = "user.env"
 CHROMA_FOLDER = "vector_store"
-CACHE_FILE = ".cache"
+CACHE_FILE = "cache.json"
 DEFAULT_BASE_URL = "https://dev.api.safa.ai"
 
 
@@ -25,9 +26,11 @@ class SafaConfig:
     repo_path: str
     # config specific
     config_path: str
-    env_file_path: str
     vector_store_path: str
     cache_file_path: str
+    # -- env files
+    user_env_file_path: str
+    project_env_file_path: str
     # Account Settings
     email: Optional[str]
     password: Optional[str]
@@ -36,9 +39,10 @@ class SafaConfig:
     version_id: Optional[str]
     commit_id: Optional[str]
     # Property references
-    env_properties = ["repo_path", "email", "password", "project_id", "version_id", "commit_id"]
+    user_env_properties = ["email", "password"]
+    project_env_properties = ["repo_path", "project_id", "version_id", "commit_id"]
     repr_properties = ["repo_path", "email", "project_id", "version_id", "commit_id"]
-    is_configured_paths = ["env_file_path", "cache_file_path"]
+    is_configured_paths = ["user_env_file_path", "project_env_file_path", "cache_file_path"]
     is_configured_properties = ["repo_path", "email", "password", "project_id", "version_id", "commit_id"]
     # Root
     base_url: str = DEFAULT_BASE_URL
@@ -160,14 +164,8 @@ class SafaConfig:
         Converts config to env file.
         :return: None
         """
-        property2value = {k: getattr(self, k) for k in self.env_properties}
-        env_line_items = [
-            f"SAFA_{k.upper()}={getattr(self, k)}"
-            for k, v in property2value.items() if v is not None
-        ]
-        env_content = "\n".join(env_line_items)
-        write_file_content(self.env_file_path, env_content)
-        print(f"Configuration file written to {self.env_file_path}")
+        self.__write_env_file(self, self.project_env_properties, self.project_env_file_path)
+        self.__write_env_file(self, self.user_env_properties, self.user_env_file_path)
 
     @staticmethod
     def from_repo(repo_path: str, root_env_file_path: Optional[str] = None) -> "SafaConfig":
@@ -183,21 +181,19 @@ class SafaConfig:
 
         # Config-Relative paths
         config_path = os.path.join(repo_path, CONFIG_FOLDER)
-        env_file_path = os.path.join(config_path, ENV_FILE)
+        user_env_file_path = os.path.join(config_path, USER_ENV_FILE)
+        project_env_file_path = os.path.join(config_path, PROJECT_ENV_FILE)
         vector_store_path = os.path.join(config_path, CHROMA_FOLDER)
         cache_file_path = os.path.join(config_path, CACHE_FILE)
 
-        if os.path.exists(env_file_path):
-            load_dotenv(env_file_path)
-        if root_env_file_path is None:
-            root_env_file_path = os.path.join(repo_path, ENV_FILE)
-        load_dotenv(root_env_file_path)
+        SafaConfig.__load_env_files(user_env_file_path, project_env_file_path, root_env_file_path)
 
         return SafaConfig(
             repo_path=repo_path,
             # Config paths
             config_path=config_path,
-            env_file_path=env_file_path,
+            user_env_file_path=user_env_file_path,
+            project_env_file_path=project_env_file_path,
             cache_file_path=cache_file_path,
             vector_store_path=vector_store_path,
             # User Paths
@@ -208,3 +204,34 @@ class SafaConfig:
             commit_id=os.environ.get("SAFA_COMMIT_ID"),
             base_url=os.environ.get("SAFA_BASE_URL", DEFAULT_BASE_URL)
         )
+
+    @staticmethod
+    def __load_env_files(*env_files: str) -> None:
+        """
+        Loads list of env files in order, last one has highest precedence.
+        :param env_files: List of env files.
+        :return: None
+        """
+        for env_file in env_files:
+            if os.path.exists(env_file):
+                load_dotenv(env_file)
+
+    @staticmethod
+    def __write_env_file(config: "SafaConfig", properties: List[str], env_file_path) -> None:
+        """
+        Extracts properties from config and writes them as ENV file.
+        :param config: The config to extract properties from.
+        :param properties: The properties to extract from config.
+        :param env_file_path: Path to save env file.
+        :return: None
+        """
+        property2value = {k: getattr(config, k) for k in properties}
+        env_line_items = [
+            f"SAFA_{k.upper()}={getattr(config, k)}"
+            for k, v in property2value.items() if v is not None
+        ]
+        if len(env_line_items) == 0:
+            return
+        env_content = "\n".join(env_line_items)
+        write_file_content(env_file_path, env_content)
+        print(f"Configuration file written to {env_file_path}")

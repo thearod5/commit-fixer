@@ -19,7 +19,7 @@ def run_search(config: SafaConfig, client: SafaClient):
     :param client: Client used to access SAFA API.
     :return: None
     """
-    print("...retrieving project data...")
+    print_title("Search Project")
     version_id = config.get_version_id()
     project_data = client.get_version(version_id)
 

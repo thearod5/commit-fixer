@@ -1,4 +1,5 @@
-from typing import Optional
+import os
+from typing import Optional, Tuple
 
 import git
 from git import Commit
@@ -11,22 +12,30 @@ from safa.utils.commit_store import CommitStore
 from safa.utils.commits import select_commits
 from safa.utils.diffs import calculate_diff
 from safa.utils.menu import input_confirm
-from safa.utils.printers import version_repr
+from safa.utils.printers import print_title, version_repr
+
+MAJOR_INTERVAL = os.environ.get("SAFA_MAJOR_INTERVAL", 10)
+MINOR_INTERVAL = os.environ.get("SAFA_MINOR_INTERVAL", 10)
 
 
-def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_project: bool = False):
+def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_project: bool = False,
+                    version_intervals: Tuple[int, int] = (MAJOR_INTERVAL, MINOR_INTERVAL)):
     """
     Runs through git history and creates commits in SAFA.
     :param config: Configuration object containing repository path and other settings.
     :param set_as_current_project: Whether to force setting as current project.
     :param client: SAFA client to interact with SAFA API.
+    :param version_intervals: Intervals for major and minor versions. See _get_version_type for more details.
     :return: None
     """
-    repo = git.Repo(config.repo_path)
-    s_commit: Optional[Commit] = None
+    print_title("Pushing Commits to Project")
     if not config.has_project():
         print("Please configure project before pushing.")
         return
+
+    repo = git.Repo(config.repo_path)
+    s_commit: Optional[Commit] = None
+
     project_id, version_id = config.get_project_config()
     if config.has_commit_id():
         s_commit = repo.commit(config.get_commit_id())
@@ -36,7 +45,7 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
 
     for i, commit in tqdm(list(enumerate(commits)), ncols=LINE_LENGTH):
         # create new version
-        version_type = ("major" if i % 100 == 0 else "minor") if i % 10 == 0 and i > 0 else "revision"
+        version_type = _get_version_type(i, version_intervals)
         project_version = client.create_version(project_id, version_type)
 
         # Create commit data
@@ -54,3 +63,20 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
                 config.set_project_commit(project_id, last_commit_version_id, commit.hexsha)
             if input_confirm("Run summarization job?"):
                 client.summarize(last_commit_version_id)
+
+
+def _get_version_type(iteration_idx: int, intervals: Tuple[int, int]):
+    """
+    Calculates version type using intervals defined.
+    :param iteration_idx: The index of the iteration.
+    :param intervals: The intervals for major and minor versions
+    (e.g. 10,10  = minor version every 10 revisions and a major every 10 minor versions)
+    :return: The type of version at given iteration.
+    """
+    major_interval, minor_interval = intervals
+    if iteration_idx % major_interval * minor_interval == 0 and iteration_idx > 0:
+        return "major"
+    elif iteration_idx % minor_interval == 0 and iteration_idx > 0:
+        return "minor"
+    else:
+        return "revision"

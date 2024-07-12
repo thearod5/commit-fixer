@@ -145,3 +145,20 @@ def print_groups(options: Dict[str, str], groups: Dict[str, str | Dict], prefix:
         else:
             print_groups(options, group, prefix=prefix + GROUP_DELIMITER, idx2option=idx2option)
     return idx2option
+
+
+def input_int(prompt: str, retries: int = 0, max_retries: int = 3) -> int:
+    """
+    Prompts user to input number.
+    :param prompt: The prompt to display to user.
+    :param retries: Current number of retries.
+    :param max_retries: Maximum number of retries before raising exception.
+    :return: Inputted int.
+    """
+    if retries >= max_retries:
+        raise Exception("Expected user to provide number. Max retries reached.")
+    user_response = input(prompt)
+    try:
+        return int(user_response)
+    except:
+        return input_int(prompt, retries=retries + 1)

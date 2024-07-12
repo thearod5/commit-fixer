@@ -31,7 +31,7 @@ TOOL_PERMISSIONS = {
     "account": ["*"]
 }
 TOOL_NAMES = {
-    "committer": "Commit Changes",
+    "committer": "Commit",
     "search": "Search",
     "push_project": "Push",
     "refresh_project": "Refresh",
@@ -42,11 +42,12 @@ TOOL_NAMES = {
 }
 TOOL_GROUPS = {
     "Tools": [
+        "search",
         "committer",
-        "search"
+        "push_project",
     ],
     "Projects": [
-        "push_project",
+
         "delete_project",
         "list_projects",
         "refresh_project",

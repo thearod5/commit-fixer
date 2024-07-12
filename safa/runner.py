@@ -22,6 +22,7 @@ def main() -> None:
     Allows users to run tools.
     :return: None
     """
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
     repo_path, env_file_path, tool = parse_args()
     print("\n", safa_banner.strip(), "\n\n")
 
