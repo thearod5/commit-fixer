@@ -3,9 +3,15 @@ from typing import Callable, Dict, List, Optional
 from safa.utils.menu import input_option
 
 
+def input_menu_paged(items: List[str], **kwargs):
+    page_menu = PageMenu(items, **kwargs)
+    return page_menu.select()
+
+
 class PageMenu:
     def __init__(self, items: List[str], n_item_per_page: int = 5, title: str = "Options",
-                 many: bool = False, custom_actions: Optional[Dict[str, Callable]] = None):
+                 many: bool = False, custom_actions: Optional[Dict[str, Callable]] = None,
+                 finish_selection_title: str = "Finish Selection"):
         """
         Creates new paged selection menu.
         :param items: Items to select from.
@@ -20,6 +26,7 @@ class PageMenu:
         self.page = 0
         self.custom_actions = custom_actions if custom_actions else {}
         self.selected_items: List[str] = []
+        self.finish_selection_title = finish_selection_title
 
     def select(self):
         if len(self.selected_items) == 1:
@@ -88,7 +95,7 @@ class PageMenu:
             actions["first_page"] = "First Page"
 
         if self.many:
-            actions["finish_selection"] = "Finish Selection"
+            actions["finish_selection"] = self.finish_selection_title
 
         return actions
 

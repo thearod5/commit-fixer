@@ -7,7 +7,7 @@ from git import Blob, Commit, Repo
 
 from safa.utils.markdown import list_formatter
 from safa.utils.menu import input_confirm, input_option
-from safa.utils.page_menu import PageMenu
+from safa.utils.page_menu import input_menu_paged
 
 
 def select_commits(repo: Repo) -> List[Commit]:
@@ -47,8 +47,7 @@ def input_commit(repo: Repo, **kwargs) -> Commit | List[Commit]:
     commit_keys = list(id2commit.keys())
 
     # Start selection menu
-    page_menu = PageMenu(commit_keys, **kwargs)
-    selected_commit_ids = page_menu.select()
+    selected_commit_ids = input_menu_paged(commit_keys, **kwargs)
     if isinstance(selected_commit_ids, list):
         return [id2commit[commit_id] for commit_id in selected_commit_ids]
     return id2commit[selected_commit_ids]

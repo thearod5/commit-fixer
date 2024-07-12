@@ -6,7 +6,9 @@ from dotenv import load_dotenv
 
 from safa.api.client_factory import create_safa_client
 from safa.api.safa_client import SafaClient
-from safa.tools.projects import run_configure_project
+from safa.constants import usage_msg
+from safa.tools.projects.configure import run_configure_project
+from safa.tools.projects.push import run_push_commit
 from safa.utils.fs import write_json
 from safa.utils.printers import print_title
 
@@ -49,13 +51,17 @@ def configure(config: SafaConfig) -> SafaClient:
 
     write_json(config.cache_file_path, {})
 
-    print_title("Account Configuration", factor=0.5)
-    run_configure_account(config)
+    if not config.has_account():
+        print_title("Account Configuration", factor=0.5)
+        run_configure_account(config)
 
     client = create_safa_client(config)
 
-    print_title("Project Configuration")
-    run_configure_project(config, client)
+    if not config.has_project():
+        run_configure_project(config, client)
+
+    print_title("Commit Configuration")
+    run_push_commit(config, client, set_as_current_project=True)
 
     print("Configuration Finished.")
     return client

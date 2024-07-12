@@ -1,10 +1,9 @@
 import argparse
 import os
 import sys
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 SRC_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-print("SRS", SRC_PATH)
 sys.path.append(SRC_PATH)
 
 from safa.api.client_factory import create_safa_client
@@ -18,11 +17,12 @@ from safa.tools.configure import configure
 from safa.utils.menu import input_option
 
 
-def main(repo_path: str, env_file_path: Optional[str] = None, tool: Optional[str] = None) -> None:
+def main() -> None:
     """
     Allows users to run tools.
     :return: None
     """
+    repo_path, env_file_path, tool = parse_args()
     print("\n", safa_banner.strip(), "\n\n")
 
     config = SafaConfig.from_repo(repo_path, root_env_file_path=env_file_path)
@@ -94,4 +94,4 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    main(*parse_args())
+    main()

@@ -2,13 +2,17 @@ from typing import Callable, Dict
 
 from safa.tools.committer import run_committer
 from safa.tools.configure import run_configure_account
-from safa.tools.projects import delete_project, list_projects, refresh_project, run_configure_project, run_push_project
+from safa.tools.projects.configure import run_configure_project
+from safa.tools.projects.delete import delete_project
+from safa.tools.projects.push import run_push_commit
+from safa.tools.projects.refresh import refresh_project
+from safa.tools.projects.select import list_projects
 from safa.tools.search import run_search
 
 TOOL_FUNCTIONS: Dict[str, Callable] = {
     "committer": run_committer,
     "search": run_search,
-    "push_project": run_push_project,
+    "push_project": run_push_commit,
     "refresh_project": refresh_project,
     "delete_project": delete_project,
     "list_projects": list_projects,
@@ -33,7 +37,7 @@ TOOL_NAMES = {
     "refresh_project": "Refresh",
     "delete_project": "Delete",
     "list_projects": "List",
-    "project": "Settings",
+    "project": "Configure",
     "account": "Settings"
 }
 TOOL_GROUPS = {

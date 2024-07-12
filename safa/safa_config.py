@@ -10,6 +10,7 @@ CONFIG_FOLDER = ".safa"
 ENV_FILE = ".env"
 CHROMA_FOLDER = "vector_store"
 CACHE_FILE = ".cache"
+DEFAULT_BASE_URL = "https://dev.api.safa.ai"
 
 
 @dataclass
@@ -39,6 +40,8 @@ class SafaConfig:
     repr_properties = ["repo_path", "email", "project_id", "version_id", "commit_id"]
     is_configured_paths = ["env_file_path", "cache_file_path"]
     is_configured_properties = ["repo_path", "email", "password", "project_id", "version_id", "commit_id"]
+    # Root
+    base_url: str = DEFAULT_BASE_URL
 
     def __repr__(self) -> str:
         """
@@ -61,7 +64,7 @@ class SafaConfig:
         Removes project settings details and saves configuration.
         :return: None
         """
-        self.set_project(None, None, None)
+        self.set_project_commit(None, None, None)
         self.__to_env()
 
     def set_account(self, email: Optional[str], password: Optional[str]):
@@ -75,7 +78,7 @@ class SafaConfig:
         self.password = password
         self.__to_env()
 
-    def set_project(self, project_id: Optional[str], version_id: Optional[str], commit_id: Optional[str]):
+    def set_project_commit(self, project_id: Optional[str], version_id: Optional[str], commit_id: Optional[str]):
         """
         Sets default project in configuration.
         :param project_id: ID of project.
@@ -87,6 +90,7 @@ class SafaConfig:
         self.version_id = version_id
         self.commit_id = commit_id
         self.__to_env()
+        print(f"New project has been set: https://app.safa.ai/versions/{self.version_id}")
 
     def is_configured(self) -> bool:
         """
@@ -106,11 +110,11 @@ class SafaConfig:
             return self.version_id
         raise Exception("Project version is not configured.")
 
-    def has_version_id(self) -> bool:
+    def has_project(self) -> bool:
         """
         :return: Returns whether version ID is configured.
         """
-        return self.version_id is not None
+        return self.project_id is not None and self.version_id is not None
 
     def has_account(self) -> bool:
         """
@@ -118,13 +122,26 @@ class SafaConfig:
         """
         return self.email is not None and self.password is not None
 
-    def get_project_config(self) -> Tuple[str, str, str]:
+    def has_commit_id(self) -> bool:
+        """
+        :return: Whether commit is configured
+        """
+        return self.commit_id is not None
+
+    def get_commit_id(self) -> str:
+        """
+        :return: Returns commit
+        """
+        assert self.commit_id is not None, "use `has_commit_id` before retrieving commit"
+        return self.commit_id
+
+    def get_project_config(self) -> Tuple[str, str]:
         """
         :return: Returns project details.
         """
-        if self.project_id is None or self.version_id is None or self.commit_id:
+        if self.project_id is None or self.version_id is None:
             raise Exception("One of project_id, version_id, or commit_id is None.")
-        return self.project_id, self.version_id, self.commit_id  # type: ignore
+        return self.project_id, self.version_id
 
     def get_configured_entities(self) -> List[str]:
         """
@@ -134,7 +151,7 @@ class SafaConfig:
         permissions = []
         if self.has_account():
             permissions.append("user")
-        if self.has_version_id():
+        if self.has_project():
             permissions.append("project")
         return permissions
 
@@ -189,4 +206,5 @@ class SafaConfig:
             project_id=os.environ.get("SAFA_PROJECT_ID"),
             version_id=os.environ.get("SAFA_VERSION_ID"),
             commit_id=os.environ.get("SAFA_COMMIT_ID"),
+            base_url=os.environ.get("SAFA_BASE_URL", DEFAULT_BASE_URL)
         )

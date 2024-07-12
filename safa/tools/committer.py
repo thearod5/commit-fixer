@@ -45,7 +45,7 @@ def run_committer(config: SafaConfig, client: SafaClient) -> None:
         s_commit = repo.commit(config.commit_id) if config.commit_id else None
         commit_data = calculate_diff(repo, commit, starting_commit=s_commit, prefix=f"{version_repr(project_version)}: ")
         client.commit(new_version_id, commit_data)
-        config.set_project(config.project_id, new_version_id, commit.hexsha)
+        config.set_project_commit(config.project_id, new_version_id, commit.hexsha)
         print(f"Commit finished! See project @ https://app.safa.ai/project?version={new_version_id}")
 
 

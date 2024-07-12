@@ -63,6 +63,9 @@ class CommitStore:
         :return: None
         """
         for artifact in artifacts:
+            a_name = artifact["name"]
+            if a_name not in self.artifact_store:
+                raise Exception("Artifact ({a_name}) has not been set in store.)")
             artifact["id"] = self.artifact_store[artifact["name"]]["id"]
 
     def _update_traces(self, traces: List[Dict]) -> None:

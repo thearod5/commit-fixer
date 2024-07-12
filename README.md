@@ -22,6 +22,7 @@ Generates commit summary for currently staged changes. Commits changes if user a
     - [ ] LLM Settings
 - [ ] Chat with your project
 - [ ] Task manager
+- [ ] What does this line do? (feat; AST Summarization)
 - [x] MVP:
     - Create new project / select existing
     - Import project

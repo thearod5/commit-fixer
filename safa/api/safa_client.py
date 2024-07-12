@@ -8,17 +8,18 @@ from safa.safa_config import SafaConfig
 
 
 class SafaClient:
-    BASE_URL = "https://api.safa.ai"
 
-    def __init__(self, store: Optional[SafaStore] = None, http_client: Optional[HttpClient] = None):
+    def __init__(self, base_url: str, store: Optional[SafaStore] = None, http_client: Optional[HttpClient] = None):
         """
         Creates new client to interact with SAFA api.
+        :param base_url: URL for SAFA API.
         :param store: Used to store intermediate results.
+        :param http_client: Client used to make HTTP requests.
         """
         if store is None:
             store = SafaStore()
         if http_client is None:
-            http_client = HttpClient(SafaClient.BASE_URL)
+            http_client = HttpClient(base_url)
         self.http_client = http_client
         self.store = store
 
@@ -48,6 +49,7 @@ class SafaClient:
         """
 
         def get_data():
+            print("...retrieving project data...")
             project_data = self.http_client.get(f"projects/versions/{version_id}")
             return project_data
 

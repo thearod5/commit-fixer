@@ -28,9 +28,8 @@ def run_search(config: SafaConfig, client: SafaClient):
         db = Chroma(embedding_function=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2"),
                     persist_directory=config.vector_store_path)
     else:
-        print("...create vector store...")
-        db = build_vector_store(project_data["artifacts"], vector_store_path=config.vector_store_path)
-        db.persist()
+        db = create_vector_store(project_data["artifacts"], vector_store_path=config.vector_store_path)
+
     while True:
         query = input("Search Query (or 'exit'):")
         if query == 'exit':
@@ -44,10 +43,12 @@ def run_search(config: SafaConfig, client: SafaClient):
         print(list_formatter(results), "\n")
 
 
-def build_vector_store(artifacts: List[Dict], vector_store_path: Optional[str] = None):
+def create_vector_store(artifacts: List[Dict], vector_store_path: Optional[str] = None):
+    print("...creating vector store...")
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     documents = [get_artifact_document(a) for a in artifacts]
     db = Chroma.from_documents(documents, embeddings, persist_directory=vector_store_path)
+    db.persist()
     return db
 
 
