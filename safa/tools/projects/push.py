@@ -12,6 +12,7 @@ from safa.tools.projects.refresh import refresh_project
 from safa.utils.commit_store import CommitStore
 from safa.utils.commits import select_commits
 from safa.utils.diffs import calculate_diff
+from safa.utils.menus.inputs import input_option
 from safa.utils.menus.printers import print_title, version_repr
 
 MAJOR_INTERVAL = os.environ.get("SAFA_MAJOR_INTERVAL", 10)
@@ -47,7 +48,7 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
 
     for i, commit in tqdm(list(enumerate(commits)), ncols=LINE_LENGTH):
         # create new version
-        version_type = _get_version_type(i, version_intervals)
+        version_type = _get_version_type(i, version_intervals) if len(commits) > 1 else input_version_type()
         project_version = client.create_version(project_id, version_type)
 
         # Create commit data
@@ -80,3 +81,7 @@ def _get_version_type(iteration_idx: int, intervals: Tuple[int, int]):
         return "minor"
     else:
         return "revision"
+
+
+def input_version_type() -> str:
+    return input_option(["major", "minor", "revision"], title="What kind of version do you want to create?")

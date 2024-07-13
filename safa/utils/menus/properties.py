@@ -71,10 +71,12 @@ class MenuProperties:
         :param self: Page menu to create title for.
         :return: The menu title.
         """
-        title = f"{self.page_title}:{self._page + 1}/{self._max_pages}"
+        details = []
+        if self._max_pages > 1:
+            details.append(f"{self.page_title}:{self._page + 1}/{self._max_pages}")
         if self.many:
-            title += f"\n{self.selected_title}: {self.selected_items}"
-        return title
+            details.append(f"\n{self.selected_title}: {self.selected_items}")
+        return "\n".join(details).strip()
 
     def get_item(self, key: str) -> str:
         """

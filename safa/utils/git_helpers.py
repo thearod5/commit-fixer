@@ -63,5 +63,5 @@ def stage_files(repo: git.Repo) -> None:
 
     if len(changed_files) == 0:
         return
-    to_stage = input_option(changed_files, title="Unstaged Files", many=True)
+    to_stage = input_option(changed_files, title="Unstaged Files", many=True, page_items=len(changed_files))
     repo.index.add(to_stage)
