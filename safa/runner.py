@@ -3,6 +3,8 @@ import os
 import sys
 from typing import Dict, List, OrderedDict
 
+import urllib3
+
 from safa.tools.configure import configure
 
 SRC_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -23,7 +25,7 @@ def main() -> None:
     Allows users to run tools.
     :return: None
     """
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    setup_main()
     repo_path, env_file_path, tool = parse_args()
     print("\n", safa_banner.strip(), "\n\n")
 
@@ -94,6 +96,11 @@ def parse_args():
     env_file_path = clean_path(args.env) if args.env else None
 
     return repo_path, env_file_path, args.tool
+
+
+def setup_main():
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 if __name__ == "__main__":

@@ -25,7 +25,8 @@ def input_menu_paged(items: List[str] | Dict[str, str], _properties=None, **kwar
     action_options = _properties.create_options("actions")
 
     print_title(_properties.title)
-    print(title_Details, "\n")
+    if title_Details:
+        print(title_Details, "\n")
     print_dict(menu_options)
     print_dict(action_options)
 
