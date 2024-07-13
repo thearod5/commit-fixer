@@ -18,8 +18,8 @@ def input_menu_paged(items: List[str] | Dict[str, str], _properties=None, **kwar
         _properties = MenuProperties(items=items, **kwargs)
     if len(_properties.items) == 0:
         raise Exception("No items to select from.")
-    if len(_properties.items) == 1:
-        return _properties.items if _properties.many else _properties.items[0]
+    if len(_properties.items) == 1 and not _properties.many:
+        return _properties.items[0]
     title_Details = _properties.get_title_details()
     menu_options = _properties.create_options("items")
     action_options = _properties.create_options("actions")
