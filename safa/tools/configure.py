@@ -36,6 +36,7 @@ def configure(config: SafaConfig) -> SafaClient:
     if not os.path.isdir(config.config_path):
         if input_confirm("Is this the root of your repository?", default_value="y"):
             os.makedirs(config.config_path, exist_ok=True)
+
         else:
             print(usage_msg)
             sys.exit(-1)
@@ -48,6 +49,8 @@ def configure(config: SafaConfig) -> SafaClient:
         print("Okay :)")
         sys.exit(-1)
 
+    write_json(config.cache_file_path, {})
+    
     if not config.has_account():
         print_title("Account Configuration", factor=0.5)
         run_configure_account(config)
@@ -57,7 +60,6 @@ def configure(config: SafaConfig) -> SafaClient:
     if not config.has_project():
         print_title("Project Configuration")
         run_configure_project(config, client)
-        write_json(config.cache_file_path, {})
 
     if not config.has_commit_id():
         print_title("Commit Configuration")

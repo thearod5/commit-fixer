@@ -23,6 +23,7 @@ Generates commit summary for currently staged changes. Commits changes if user a
 - [ ] Chat with your project
 - [ ] Task manager
 - [ ] What does this line do? (feat; AST Summarization)
+- [ ] Be able to search only artifacts of specific type.
 - [x] MVP:
     - Create new project / select existing
     - Import project

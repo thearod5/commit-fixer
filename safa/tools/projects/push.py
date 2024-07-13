@@ -41,7 +41,9 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
         s_commit = repo.commit(config.get_commit_id())
     commits = select_commits(repo)
 
-    store = CommitStore()
+    version_data = client.get_version(version_id)
+    artifact_store = {a["name"]: a["id"] for a in version_data["artifacts"]}
+    store = CommitStore(artifact_store=artifact_store)
 
     for i, commit in tqdm(list(enumerate(commits)), ncols=LINE_LENGTH):
         # create new version
@@ -50,16 +52,16 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
 
         # Create commit data
         commit_data = calculate_diff(repo, commit, starting_commit=s_commit, prefix=f"{version_repr(project_version)}: ")
-        store.update_request(commit_data)
+        store.add_ids(commit_data)
         commit_response = client.commit(project_version["versionId"], commit_data)
-        store.process_response(commit_response)
+        store.save_ids(commit_response)
         s_commit = commit
 
         is_last_commit = i == len(commits) - 1
 
         if is_last_commit:
             last_commit_version_id = project_version["versionId"]
-            config.set_commit_id(commit.hexsha)
+            config.set_project(project_id, last_commit_version_id, commit_id=commit.hexsha)
             if input_confirm("Run summarization job?"):
                 client.summarize(last_commit_version_id)
 

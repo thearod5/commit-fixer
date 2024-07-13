@@ -1,17 +1,17 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from safa.data.commits import DiffDataType
 
 
 class CommitStore:
-    def __init__(self):
+    def __init__(self, artifact_store: Optional[Dict[str, str]] = None):
         """
         Creates store to keep track of current artifacts in a timeline of commits.
         """
-        self.artifact_store = {}
+        self.artifact_store = artifact_store if artifact_store else {}
         self.trace_store = {}
 
-    def update_request(self, commit_request: DiffDataType) -> None:
+    def add_ids(self, commit_request: DiffDataType) -> None:
         """
         Updates request with entities ids.
         :param commit_request: Commit request data.
@@ -23,7 +23,7 @@ class CommitStore:
         self._update_traces(commit_request["traces"]["modified"])
         self._update_traces(commit_request["traces"]["removed"])
 
-    def process_response(self, commit_response: DiffDataType) -> None:
+    def save_ids(self, commit_response: DiffDataType) -> None:
         """
         Adds artifact and trace link information to commit data.
         :param commit_response: Response to commit.
@@ -35,7 +35,6 @@ class CommitStore:
 
         self._add_traces(commit_response["traces"]["added"])
         self._add_traces(commit_response["traces"]["modified"])
-        self._remove_traces(commit_response["traces"]["removed"])
 
     def _add_artifacts(self, artifacts: List[Dict]) -> None:
         """
@@ -44,7 +43,7 @@ class CommitStore:
         :return: None
         """
         for artifact in artifacts:
-            self.artifact_store[artifact["name"]] = artifact
+            self.artifact_store[artifact["name"]] = artifact["id"]
 
     def _add_traces(self, traces: List[Dict]) -> None:
         """
@@ -54,7 +53,7 @@ class CommitStore:
         """
         for trace in traces:
             t_id = f"{trace['sourceName']}*{trace['targetName']}"
-            self.trace_store[t_id] = trace
+            self.trace_store[t_id] = trace["id"]
 
     def _update_artifacts(self, artifacts: List[Dict]) -> None:
         """
@@ -66,7 +65,7 @@ class CommitStore:
             a_name = artifact["name"]
             if a_name not in self.artifact_store:
                 raise Exception("Artifact ({a_name}) has not been set in store.)")
-            artifact["id"] = self.artifact_store[artifact["name"]]["id"]
+            artifact["id"] = self.artifact_store[artifact["name"]]
 
     def _update_traces(self, traces: List[Dict]) -> None:
         """
@@ -78,9 +77,9 @@ class CommitStore:
             t_id = self.get_tid(trace)
             trace["id"] = self.trace_store[t_id]["id"]
             if trace["sourceName"] in self.artifact_store:
-                trace["sourceId"] = self.artifact_store[trace["sourceName"]]["id"]
+                trace["sourceId"] = self.artifact_store[trace["sourceName"]]
             if trace["targetName"] in self.artifact_store:
-                trace["targetId"] = self.artifact_store[trace["targetName"]]["id"]
+                trace["targetId"] = self.artifact_store[trace["targetName"]]
 
     def _remove_artifacts(self, artifacts: List[Dict]) -> None:
         """
@@ -90,16 +89,6 @@ class CommitStore:
         """
         for artifact in artifacts:
             del self.artifact_store[artifact["name"]]
-
-    def _remove_traces(self, traces: List[Dict]) -> None:
-        """
-        Removes traces from store.
-        :param traces: The traces in the store.
-        :return: None
-        """
-        for trace in traces:
-            t_id = self.get_tid(trace)
-            del self.trace_store[t_id]
 
     @staticmethod
     def get_tid(trace: Dict) -> str:

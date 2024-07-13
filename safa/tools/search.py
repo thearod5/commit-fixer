@@ -8,11 +8,10 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from safa.api.safa_client import SafaClient
 from safa.safa_config import SafaConfig
 from safa.utils.markdown import list_formatter
-from safa.utils.menus.inputs import input_confirm
 from safa.utils.menus.printers import print_title
 
 
-def run_search(config: SafaConfig, client: SafaClient):
+def run_search(config: SafaConfig, client: SafaClient, done_title: str = "Done", k: int = 3):
     """
     Runs search on configured project
     :param config: Configuration used to get SAFA account and project.
@@ -23,19 +22,22 @@ def run_search(config: SafaConfig, client: SafaClient):
     version_id = config.get_version_id()
     project_data = client.get_version(version_id)
 
-    if os.path.isdir(config.vector_store_path) and input_confirm("Reload previous vector store?", default_value="y"):
+    if os.path.isdir(config.vector_store_path):  # user should refresh if they want to create new one
         print("...reloading vector store...")
         db = Chroma(embedding_function=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2"),
                     persist_directory=config.vector_store_path)
     else:
         db = create_vector_store(project_data["artifacts"], vector_store_path=config.vector_store_path)
 
-    while True:
-        query = input("Search Query (or 'done'):")
-        if query == 'exit':
-            return
+    project_artifact_types = [t["name"] for t in project_data["artifactTypes"]]
+    search_types = input(f"Search Types ({','.join(project_artifact_types)})").strip().split(",")
 
-        docs = db.similarity_search_with_score(query, k=3)
+    while True:
+        query = input(f"Search Query (or '{done_title}'):")
+        if query.lower() == done_title.lower():
+            return
+        filter_dict = {"type": {"$in": search_types}}
+        docs = db.similarity_search_with_score(query, k=k, filter=filter_dict)  # type: ignore
 
         print_title("Results")
         results = [f"{d.metadata['name']}\n\t{d.page_content.split('.')[0]}" for d, score in docs if
@@ -62,7 +64,7 @@ def get_artifact_document(a: Dict) -> Document:
     :return: Document.
     """
     a_content = get_artifact_embedding_content(a)
-    return Document(a_content, id=a["name"], metadata={"id": a["id"], "name": a["name"]})
+    return Document(a_content, id=a["name"], metadata={"id": a["id"], "name": a["name"], "type": a["type"]})
 
 
 def get_artifact_embedding_content(a: Dict):

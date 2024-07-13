@@ -6,7 +6,7 @@ import git
 from git import Blob, Commit, Repo
 
 from safa.utils.markdown import list_formatter
-from safa.utils.menus.inputs import input_confirm, input_option
+from safa.utils.menus.inputs import input_option
 from safa.utils.menus.page_menu import input_menu_paged
 
 
@@ -23,11 +23,7 @@ def select_commits(repo: Repo) -> List[Commit]:
     elif commit_import_option == "single commit":
         commits: List[Commit] = [cast(Commit, input_commit(repo, many=False))]
     elif commit_import_option == "multiple commits":
-        if input_confirm(title="Import all commits?"):
-            branch_name = select_branch(repo)
-            commits = [c for c in repo.iter_commits(rev=branch_name, reverse=True)]
-        else:
-            commits = cast(List[Commit], input_commit(repo, many=True))
+        commits = cast(List[Commit], input_commit(repo, many=True))
     else:
         raise Exception(f"Expected answer to be one of {commit_import_options}")
     return commits

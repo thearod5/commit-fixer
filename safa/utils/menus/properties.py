@@ -1,15 +1,15 @@
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, cast
 
-ACTIONS = ["next_page", "previous_page", "last_page", "first_page", "finish_selection", "select_all"]
+ACTIONS = ["next_page", "previous_page", "last_page", "first_page", "select_all", "finish_selection"]
 ACTION_GROUPS = {"Actions": ACTIONS}
 ACTION2KEY = {
     "next_page": "n",
     "previous_page": "p",
     "last_page": "l",
     "first_page": "f",
+    "select_all": "a",
     "finish_selection": "d",
-    "select_all": "a"
 }
 KEY2ACTION = {v: k for k, v in ACTION2KEY.items()}
 ItemMapType = Dict

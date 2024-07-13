@@ -17,4 +17,4 @@ def refresh_project(config: SafaConfig, client: SafaClient) -> None:
     client.store.delete(STORE_PROJECT_KEY, version_id)
     project_data = client.get_version(version_id)
     project_artifacts = project_data["artifacts"]
-    db = create_vector_store(project_data["artifacts"], vector_store_path=config.vector_store_path)
+    db = create_vector_store(project_artifacts, vector_store_path=config.vector_store_path)
