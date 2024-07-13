@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 from typing import Any, Dict, List, Tuple, Union, cast
 
 
@@ -88,3 +89,24 @@ def read_json_file(file_path: str, init_if_empty: bool = True) -> Dict[str, Any]
     if init_if_empty and len(file_content) == 0:
         return {}
     return cast(Dict[str, Any], json.loads(file_content))
+
+
+def delete_dir(path) -> None:
+    """
+    Deletes all files and subdirectories in the given directory, then deletes the directory itself.
+    :param path: The path to the directory to be deleted.
+    """
+    if not os.path.isdir(path):
+        raise ValueError(f"The path {path} is not a valid directory.")
+
+    # Remove all contents of the directory
+    for item in os.listdir(path):
+        item_path = os.path.join(path, item)
+        if os.path.isfile(item_path) or os.path.islink(item_path):
+            os.unlink(item_path)  # Remove file or symbolic link
+        elif os.path.isdir(item_path):
+            shutil.rmtree(item_path)  # Remove directory and its contents
+
+    # Remove the directory itself
+    os.rmdir(path)
+    print(f"Directory {path} and all its contents have been deleted.")

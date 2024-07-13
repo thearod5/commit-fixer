@@ -17,7 +17,6 @@ safa_banner = (
 ███████║██║  ██║██║     ██║  ██║    ██╗    ██║  ██║██║
 ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝    ╚═╝    ╚═╝  ╚═╝╚═╝                        
         Making your documentation work for you.
-                  https://safa.ai
     """
 )
 usage_msg = (

@@ -8,10 +8,10 @@ from tqdm import tqdm
 from safa.api.safa_client import SafaClient
 from safa.constants import LINE_LENGTH
 from safa.safa_config import SafaConfig
+from safa.tools.projects.refresh import refresh_project
 from safa.utils.commit_store import CommitStore
 from safa.utils.commits import select_commits
 from safa.utils.diffs import calculate_diff
-from safa.utils.menus.inputs import input_confirm
 from safa.utils.menus.printers import print_title, version_repr
 
 MAJOR_INTERVAL = os.environ.get("SAFA_MAJOR_INTERVAL", 10)
@@ -62,8 +62,7 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
         if is_last_commit:
             last_commit_version_id = project_version["versionId"]
             config.set_project(project_id, last_commit_version_id, commit_id=commit.hexsha)
-            if input_confirm("Run summarization job?"):
-                client.summarize(last_commit_version_id)
+            refresh_project(config, client)
 
 
 def _get_version_type(iteration_idx: int, intervals: Tuple[int, int]):

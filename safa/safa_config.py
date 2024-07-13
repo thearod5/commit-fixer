@@ -41,7 +41,7 @@ class SafaConfig:
     # Property references
     user_env_properties = ["email", "password"]
     project_env_properties = ["project_id", "version_id", "commit_id"]
-    repr_properties = ["repo_path", "email", "project_id", "version_id", "commit_id"]
+    repr_properties = ["base_url", "repo_path", "email", "project_id", "version_id", "commit_id"]
     is_configured_paths = ["user_env_file_path", "project_env_file_path", "cache_file_path"]
     is_configured_properties = ["repo_path", "email", "password", "project_id", "version_id", "commit_id"]
     # Root

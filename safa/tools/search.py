@@ -7,15 +7,18 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 
 from safa.api.safa_client import SafaClient
 from safa.safa_config import SafaConfig
+from safa.utils.fs import delete_dir
 from safa.utils.markdown import list_formatter
 from safa.utils.menus.printers import print_title
 
 
-def run_search(config: SafaConfig, client: SafaClient, done_title: str = "Done", k: int = 3):
+def run_search(config: SafaConfig, client: SafaClient, done_title: str = "done", k: int = 3):
     """
     Runs search on configured project
     :param config: Configuration used to get SAFA account and project.
     :param client: Client used to access SAFA API.
+    :param done_title: Title used to finish search feature.
+    :param k: Number of items to show.
     :return: None
     """
     print_title("Search Project")
@@ -30,7 +33,7 @@ def run_search(config: SafaConfig, client: SafaClient, done_title: str = "Done",
         db = create_vector_store(project_data["artifacts"], vector_store_path=config.vector_store_path)
 
     project_artifact_types = [t["name"] for t in project_data["artifactTypes"]]
-    search_types = input(f"Search Types ({','.join(project_artifact_types)})").strip().split(",")
+    search_types = input(f"Search Types ({','.join(project_artifact_types)}):").strip().split(",")
 
     while True:
         query = input(f"Search Query (or '{done_title}'):")
@@ -50,6 +53,8 @@ def create_vector_store(artifacts: List[Dict], vector_store_path: Optional[str] 
     if len(artifacts) == 0:
         print("No artifacts in project.")
         return
+    if os.path.isdir(vector_store_path):
+        delete_dir(vector_store_path)
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     documents = [get_artifact_document(a) for a in artifacts]
     db = Chroma.from_documents(documents, embeddings, persist_directory=vector_store_path)
