@@ -9,17 +9,14 @@ from safa.safa_config import SafaConfig
 
 class SafaClient:
 
-    def __init__(self, base_url: str, store: Optional[SafaStore] = None, http_client: Optional[HttpClient] = None):
+    def __init__(self, http_client: HttpClient, store: Optional[SafaStore] = None):
         """
         Creates new client to interact with SAFA api.
-        :param base_url: URL for SAFA API.
         :param store: Used to store intermediate results.
         :param http_client: Client used to make HTTP requests.
         """
         if store is None:
             store = SafaStore()
-        if http_client is None:
-            http_client = HttpClient(base_url)
         self.http_client = http_client
         self.store = store
 
@@ -61,12 +58,7 @@ class SafaClient:
         :param kwargs: Additional keyword arguments to get_or_store
         :return: List of projects.
         """
-
-        def get_data():
-            projects = self.http_client.get("projects")
-            return projects
-
-        result = self.get_or_store(STORE_PROJECT_KEY, "user_projects", get_data, **kwargs)
+        result = self.http_client.get("projects")
         return cast(List[Dict], result)
 
     def get_project_versions(self, project_id: str) -> List[Dict]:

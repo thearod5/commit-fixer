@@ -2,8 +2,8 @@ from typing import Dict
 
 import git
 
-from safa.utils.menu import input_option
-from safa.utils.printers import print_title
+from safa.utils.menus.inputs import input_option
+from safa.utils.menus.printers import print_title
 
 
 def get_staged_diffs(repo: git.Repo) -> Dict[str, str]:
@@ -63,5 +63,5 @@ def stage_files(repo: git.Repo) -> None:
 
     if len(changed_files) == 0:
         return
-    to_stage = input_option(changed_files, title="Unstaged Files", allow_many=True)
+    to_stage = input_option(changed_files, title="Unstaged Files", many=True)
     repo.index.add(to_stage)

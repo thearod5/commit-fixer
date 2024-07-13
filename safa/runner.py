@@ -1,7 +1,9 @@
 import argparse
 import os
 import sys
-from typing import Dict, List
+from typing import Dict, List, OrderedDict
+
+from safa.tools.configure import configure
 
 SRC_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(SRC_PATH)
@@ -10,11 +12,10 @@ from safa.api.client_factory import create_safa_client
 from safa.constants import safa_banner
 from safa.tool_registrar import TOOL_FUNCTIONS, TOOL_GROUPS, TOOL_NAMES, TOOL_PERMISSIONS
 from safa.utils.fs import clean_path
-from safa.utils.printers import print_title
+from safa.utils.menus.printers import print_title
 
 from safa.safa_config import SafaConfig
-from safa.tools.configure import configure
-from safa.utils.menu import input_option
+from safa.utils.menus.inputs import input_option
 
 
 def main() -> None:
@@ -27,25 +28,26 @@ def main() -> None:
     print("\n", safa_banner.strip(), "\n\n")
 
     config = SafaConfig.from_repo(repo_path, root_env_file_path=env_file_path)
+    if not config.has_account() or not config.has_project() or not config.has_commit_id():
+        configure(config)
 
-    if config.is_configured():
-        client = create_safa_client(config)
-    else:
-        client = configure(config)
-
-    print("User successfully logged in.")
+    client = create_safa_client(config)
 
     print_title("Configuration")
     print(config)
 
     running = True
     while running:
-        available_tool_options, available_tool_groups = filter_tools_by_permissions(TOOL_NAMES,
-                                                                                    TOOL_GROUPS,
-                                                                                    TOOL_PERMISSIONS,
-                                                                                    config)
+        tools, tool2name, group2tools = filter_tools_by_permissions(TOOL_NAMES,
+                                                                    TOOL_GROUPS,
+                                                                    TOOL_PERMISSIONS,
+                                                                    config)
         if not tool:
-            option_selected = input_option(available_tool_options, title="Command", groups=available_tool_groups)
+            option_selected = input_option(tools,
+                                           item2name=tool2name,
+                                           title="Command",
+                                           group2items=group2tools,
+                                           page_items=len(tools))
         else:
             option_selected = tool
 
@@ -67,15 +69,15 @@ def filter_tools_by_permissions(tool_options: Dict, tool_groups: Dict[str, str |
 
     available_tools = [k for k, v in tool_permissions.items() if all([v_item in configured_entities for v_item in v]) or "*" in v]
     available_groups = _filter_groups(tool_groups, available_tools)
-    available_tools_options = {k: v for k, v in tool_options.items() if k in available_tools}
-    return available_tools_options, available_groups
+    tool2name = {k: v for k, v in tool_options.items() if k in available_tools}
+    return available_tools, tool2name, available_groups
 
 
 def _filter_groups(groups: Dict[str, str | Dict], valid_items: List[str]):
-    new_groups = {
+    new_groups = OrderedDict({
         k: [v_item for v_item in v if v_item in valid_items] if isinstance(v, list) else _filter_groups(v, valid_items)
         for k, v in groups.items()
-    }
+    })
     filtered_groups = {k: v for k, v in new_groups.items() if len(v) > 0}
     return filtered_groups
 

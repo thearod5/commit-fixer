@@ -1,4 +1,3 @@
-import os
 import sys
 
 from safa.api.http_client import HttpClient
@@ -13,13 +12,14 @@ def create_safa_client(config: SafaConfig) -> SafaClient:
     :param config: SAFA account and project configuration.
     :return: Safa Client created.
     """
-    base_url = os.environ.get("BASE_URL", "https://api.safa.ai")
+    base_url = config.base_url
     global_parameters = {"verify": False} if "localhost" in base_url else {}
     http_client = HttpClient(base_url, global_parameters=global_parameters)
     store = SafaStore(cache_file_path=config.cache_file_path)
-    client = SafaClient(store, http_client=http_client)
+    client = SafaClient(http_client=http_client, store=store)
     if config.email is None:
         print("Please configure account.")
         sys.exit(-1)
     client.login(config=config)
+    print("User successfully logged in.")
     return client

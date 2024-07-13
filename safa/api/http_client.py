@@ -44,6 +44,15 @@ class HttpClient:
         """
         return self._request("PUT", endpoint, json=data)
 
+    def delete(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Any:
+        """
+        Performs a DELETE http request.
+        :param endpoint: Relative path to endpoint from base url.
+        :param data: The data to include in request.
+        :return: Request response.
+        """
+        return self._request("DELETE", endpoint, json=data)
+
     def get_cookie(self, cookie_name: str, error: Optional[str] = None):
         """
         Retrieves cookie with given name.
@@ -56,15 +65,6 @@ class HttpClient:
         if cookie_name not in self.session.cookies:
             raise Exception(error)
         return self.session.cookies[cookie_name]
-
-    def delete(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Any:
-        """
-        Performs a DELETE http request.
-        :param endpoint: Relative path to endpoint from base url.
-        :param data: The data to include in request.
-        :return: Request response.
-        """
-        return self._request("DELETE", endpoint, json=data)
 
     def _request(self, method: str, endpoint_rel_path: str, **kwargs) -> Any:
         """

@@ -5,8 +5,10 @@ from git import Commit, Repo
 from safa.api.safa_client import SafaClient
 from safa.safa_config import SafaConfig
 from safa.tools.projects.create import run_create_project
+from safa.tools.projects.push import run_push_commit
 from safa.tools.projects.select import run_select_project
-from safa.utils.menu import input_option
+from safa.utils.commits import input_commit
+from safa.utils.menus.inputs import input_option
 
 
 def run_configure_project(config: SafaConfig, client: SafaClient, repo: Optional[Repo] = None) -> Tuple[str, str, Optional[Commit]]:
@@ -33,9 +35,11 @@ def run_configure_project(config: SafaConfig, client: SafaClient, repo: Optional
     elif selected_option == "create_new_project":
         run_create_project(config, client)
         project_id, version_id = config.get_project_config()
+        run_push_commit(config, client)
     elif selected_option == "select_existing":
-        project_id, version_id, commit_id = run_select_project(config, client)
-        project_commit = repo.commit(commit_id)
+        project_id, version_id = run_select_project(config, client)
+        project_commit = input_commit(repo)
+        config.set_commit_id(project_commit.hexsha)
     else:
         raise Exception(f"Invalid option {selected_option}")
 

@@ -6,8 +6,8 @@ import git
 from git import Blob, Commit, Repo
 
 from safa.utils.markdown import list_formatter
-from safa.utils.menu import input_confirm, input_option
-from safa.utils.page_menu import input_menu_paged
+from safa.utils.menus.inputs import input_confirm, input_option
+from safa.utils.menus.page_menu import input_menu_paged
 
 
 def select_commits(repo: Repo) -> List[Commit]:

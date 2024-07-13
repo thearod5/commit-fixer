@@ -8,8 +8,8 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from safa.api.safa_client import SafaClient
 from safa.safa_config import SafaConfig
 from safa.utils.markdown import list_formatter
-from safa.utils.menu import input_confirm
-from safa.utils.printers import print_title
+from safa.utils.menus.inputs import input_confirm
+from safa.utils.menus.printers import print_title
 
 
 def run_search(config: SafaConfig, client: SafaClient):
@@ -31,7 +31,7 @@ def run_search(config: SafaConfig, client: SafaClient):
         db = create_vector_store(project_data["artifacts"], vector_store_path=config.vector_store_path)
 
     while True:
-        query = input("Search Query (or 'exit'):")
+        query = input("Search Query (or 'done'):")
         if query == 'exit':
             return
 
@@ -45,6 +45,9 @@ def run_search(config: SafaConfig, client: SafaClient):
 
 def create_vector_store(artifacts: List[Dict], vector_store_path: Optional[str] = None):
     print("...creating vector store...")
+    if len(artifacts) == 0:
+        print("No artifacts in project.")
+        return
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     documents = [get_artifact_document(a) for a in artifacts]
     db = Chroma.from_documents(documents, embeddings, persist_directory=vector_store_path)

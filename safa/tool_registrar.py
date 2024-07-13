@@ -21,7 +21,7 @@ TOOL_FUNCTIONS: Dict[str, Callable] = {
 
 }
 TOOL_PERMISSIONS = {
-    "committer": ["project"],
+    "committer": ["user"],
     "search": ["project"],
     "push_project": ["user", "project"],
     "refresh_project": ["user"],

@@ -11,8 +11,8 @@ from safa.safa_config import SafaConfig
 from safa.utils.commit_store import CommitStore
 from safa.utils.commits import select_commits
 from safa.utils.diffs import calculate_diff
-from safa.utils.menu import input_confirm
-from safa.utils.printers import print_title, version_repr
+from safa.utils.menus.inputs import input_confirm
+from safa.utils.menus.printers import print_title, version_repr
 
 MAJOR_INTERVAL = os.environ.get("SAFA_MAJOR_INTERVAL", 10)
 MINOR_INTERVAL = os.environ.get("SAFA_MINOR_INTERVAL", 10)
@@ -59,8 +59,7 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
 
         if is_last_commit:
             last_commit_version_id = project_version["versionId"]
-            if set_as_current_project or input_confirm("Set as current project?"):
-                config.set_project_commit(project_id, last_commit_version_id, commit.hexsha)
+            config.set_commit_id(commit.hexsha)
             if input_confirm("Run summarization job?"):
                 client.summarize(last_commit_version_id)
 

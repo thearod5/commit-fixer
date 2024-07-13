@@ -40,7 +40,7 @@ class SafaConfig:
     commit_id: Optional[str]
     # Property references
     user_env_properties = ["email", "password"]
-    project_env_properties = ["repo_path", "project_id", "version_id", "commit_id"]
+    project_env_properties = ["project_id", "version_id", "commit_id"]
     repr_properties = ["repo_path", "email", "project_id", "version_id", "commit_id"]
     is_configured_paths = ["user_env_file_path", "project_env_file_path", "cache_file_path"]
     is_configured_properties = ["repo_path", "email", "password", "project_id", "version_id", "commit_id"]
@@ -68,7 +68,7 @@ class SafaConfig:
         Removes project settings details and saves configuration.
         :return: None
         """
-        self.set_project_commit(None, None, None)
+        self.set_project(None, None, None)
         self.__to_env()
 
     def set_account(self, email: Optional[str], password: Optional[str]):
@@ -82,7 +82,7 @@ class SafaConfig:
         self.password = password
         self.__to_env()
 
-    def set_project_commit(self, project_id: Optional[str], version_id: Optional[str], commit_id: Optional[str]):
+    def set_project(self, project_id: Optional[str], version_id: Optional[str], commit_id: Optional[str] = None):
         """
         Sets default project in configuration.
         :param project_id: ID of project.
@@ -93,8 +93,18 @@ class SafaConfig:
         self.project_id = project_id
         self.version_id = version_id
         self.commit_id = commit_id
+
         self.__to_env()
         print(f"New project has been set: https://app.safa.ai/versions/{self.version_id}")
+
+    def set_commit_id(self, commit_id: str) -> None:
+        """
+        Sets the current project commit.
+        :param commit_id: The commit associated with project version.
+        :return: None
+        """
+        self.commit_id = commit_id
+        self.__to_env()
 
     def is_configured(self) -> bool:
         """

@@ -6,12 +6,11 @@ from safa.api.safa_client import SafaClient
 from safa.data.artifact import ArtifactJson
 from safa.data.file_change import FileChange
 from safa.safa_config import SafaConfig
-from safa.utils.commits import get_repo_commit, print_commit_message, to_commit_message
+from safa.utils.commits import print_commit_message, to_commit_message
 from safa.utils.diff_summary import generate_summary
-from safa.utils.diffs import calculate_diff
 from safa.utils.git_helpers import get_file_content_before, get_staged_diffs, stage_files
-from safa.utils.menu import input_confirm, input_option
-from safa.utils.printers import print_title, version_repr
+from safa.utils.menus.inputs import input_int, input_option
+from safa.utils.menus.printers import print_title
 
 
 def run_committer(config: SafaConfig, client: SafaClient) -> None:
@@ -35,18 +34,6 @@ def run_committer(config: SafaConfig, client: SafaClient) -> None:
         title, changes = generate_summary(file_changes, project_data["specification"])
         run_commit_menu(repo, title, changes)
 
-    if input_confirm("Import commit to SAFA project?", default_value="y"):
-        version_type = input_option(["revision", "major", "minor"])
-        project_version = client.create_version(project_data["projectId"], version_type)
-
-        new_version_id = project_version["versionId"]
-        config.version_id = new_version_id
-        commit = get_repo_commit(repo)
-        s_commit = repo.commit(config.commit_id) if config.commit_id else None
-        commit_data = calculate_diff(repo, commit, starting_commit=s_commit, prefix=f"{version_repr(project_version)}: ")
-        client.commit(new_version_id, commit_data)
-        config.set_project_commit(config.project_id, new_version_id, commit.hexsha)
-
 
 def run_commit_menu(repo: git.Repo, title: str, changes: List[str]) -> Tuple[str, List[str]]:
     """
@@ -66,10 +53,10 @@ def run_commit_menu(repo: git.Repo, title: str, changes: List[str]) -> Tuple[str
         if option_num == 0:
             title = input("New Title:")
         elif option_num == 1:
-            change_num = int(input("Change ID:"))
+            change_num = input_int("Change ID:")
             changes[change_num - 1] = input("New Change:")
         elif option_num == 2:
-            change_num = int(input("Change ID:"))
+            change_num = input_int("Change ID:")
             changes.pop(change_num - 1)
         elif option_num == 3:
             changes.append(input("New Change:"))

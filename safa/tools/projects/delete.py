@@ -1,6 +1,6 @@
 from safa.api.safa_client import SafaClient
 from safa.safa_config import SafaConfig
-from safa.utils.page_menu import input_menu_paged
+from safa.utils.menus.page_menu import input_menu_paged
 
 
 def delete_project(config: SafaConfig, client: SafaClient) -> None:

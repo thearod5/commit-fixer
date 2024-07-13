@@ -1,6 +1,7 @@
 import os
 import sys
 from getpass import getpass
+from typing import Tuple
 
 from dotenv import load_dotenv
 
@@ -10,22 +11,20 @@ from safa.constants import usage_msg
 from safa.tools.projects.configure import run_configure_project
 from safa.tools.projects.push import run_push_commit
 from safa.utils.fs import write_json
-from safa.utils.printers import print_title
+from safa.utils.menus.printers import print_title
 
 SRC_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-print("SRS", SRC_PATH)
 sys.path.append(SRC_PATH)
 
 from safa.safa_config import SafaConfig
-from safa.utils.menu import input_confirm
+from safa.utils.menus.inputs import input_confirm
 
 configure_message_template = (
     """
-To configure your SAFA project, we are going to create the following
-
-- .safa/.env: Contains ENV variables linking your account and project.
-- .safa/.cache: Cached search results for improved performance.
-- .safa/chroma: Creates vector store to easily conduct search.
+Looks like SAFA needs to configure a few things:
+- [{}] User
+- [{}] Project
+- [{}] Commit
     """
 )
 
@@ -41,15 +40,13 @@ def configure(config: SafaConfig) -> SafaClient:
             print(usage_msg)
             sys.exit(-1)
 
-    configure_message = configure_message_template.format(config.repo_path)
+    configure_message = configure_message_template.format(*get_config_status(config))
 
     print(configure_message)
 
     if not input_confirm("Continue?", default_value="y"):
         print("Okay :)")
         sys.exit(-1)
-
-    write_json(config.cache_file_path, {})
 
     if not config.has_account():
         print_title("Account Configuration", factor=0.5)
@@ -58,10 +55,13 @@ def configure(config: SafaConfig) -> SafaClient:
     client = create_safa_client(config)
 
     if not config.has_project():
+        print_title("Project Configuration")
         run_configure_project(config, client)
+        write_json(config.cache_file_path, {})
 
-    print_title("Commit Configuration")
-    run_push_commit(config, client, set_as_current_project=True)
+    if not config.has_commit_id():
+        print_title("Commit Configuration")
+        run_push_commit(config, client, set_as_current_project=True)
 
     print("Configuration Finished.")
     return client
@@ -88,7 +88,6 @@ def run_configure_account(config: SafaConfig) -> None:
     """
     Configures account email and password.
     :param config: Configuration used to set account details in.
-    :param client: Client used to access SAFA API.
     :return:None
     """
     if config.has_account():
@@ -100,3 +99,15 @@ def run_configure_account(config: SafaConfig) -> None:
     email = input("Safa Account Email:")
     password = getpass("Safa Account Password:")
     config.set_account(email, password)
+
+
+def get_config_status(config: SafaConfig) -> Tuple[str, str, str]:
+    """
+    Returns the status of the configuration for each entity.
+    :param config: Safa config.
+    :return: User, Project, and Commit status.
+    """
+    user_status = "x" if config.has_account() else " "
+    project_status = "x" if config.has_project() else " "
+    commit_status = "x" if config.has_commit_id() else " "
+    return user_status, project_status, commit_status
