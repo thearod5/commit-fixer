@@ -16,9 +16,9 @@ Your job is the make sense of these changes and describe the new system behavior
 Each of these messages will contain the file before the change, the file specification, and the diff of the changes.
 
 Create a JSON object that:
-- summarizes each diff
-- synthesizes individual file changes into the major behavior change
-- creates a title for the entire set of changes
+- summarizes each diff to describe how the code is changing
+- uses the diff summaries to describe how the system functionality is changing
+- uses the changing system functionality to describe what is being introduced
 """
 
 SUMMARIZE_FORMAT = {

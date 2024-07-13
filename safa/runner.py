@@ -44,12 +44,18 @@ def main() -> None:
                                                                     TOOL_GROUPS,
                                                                     TOOL_PERMISSIONS,
                                                                     config)
+        tools.append("exit")
+        tool2name["exit"] = "Exit"
+        group2tools["---"] = ["exit"]
         if not tool:
             option_selected = input_option(tools,
                                            item2name=tool2name,
                                            title="Command",
                                            group2items=group2tools,
                                            page_items=len(tools))
+            if option_selected == "exit":
+                print("Good Bye :)")
+                return
         else:
             option_selected = tool
 

@@ -7,7 +7,6 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 
 from safa.api.safa_client import SafaClient
 from safa.safa_config import SafaConfig
-from safa.utils.fs import delete_dir
 from safa.utils.markdown import list_formatter
 from safa.utils.menus.printers import print_title
 
@@ -53,12 +52,9 @@ def create_vector_store(artifacts: List[Dict], vector_store_path: Optional[str] 
     if len(artifacts) == 0:
         print("No artifacts in project.")
         return
-    if os.path.isdir(vector_store_path):
-        delete_dir(vector_store_path)
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     documents = [get_artifact_document(a) for a in artifacts]
     db = Chroma.from_documents(documents, embeddings, persist_directory=vector_store_path)
-    db.persist()
     return db
 
 
