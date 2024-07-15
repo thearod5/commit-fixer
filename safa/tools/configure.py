@@ -50,7 +50,11 @@ def configure(config: SafaConfig) -> SafaClient:
         sys.exit(-1)
 
     write_json(config.cache_file_path, {})
-    
+
+    if config.llm_key is None:
+        config.llm_key = getpass("Anthropic API Key:")
+        config.save()
+
     if not config.has_account():
         print_title("Account Configuration", factor=0.5)
         run_configure_account(config)

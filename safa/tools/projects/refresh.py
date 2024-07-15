@@ -19,7 +19,8 @@ def refresh_project(config: SafaConfig, client: SafaClient) -> None:
     print_title("Refreshing Project Data")
     version_id = config.get_version_id()
     if input_confirm("Run summarization job?"):
-        client.summarize(version_id)
+        summarization_job = client.summarize(version_id)
+        client.wait_for_job(summarization_job["id"])
     client.store.delete(STORE_PROJECT_KEY, version_id)
     project_data = client.get_version(version_id)
     project_artifacts = project_data["artifacts"]

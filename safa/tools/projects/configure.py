@@ -24,7 +24,7 @@ def run_configure_project(config: SafaConfig, client: SafaClient, repo: Optional
     options = ["use_current_project", "create_new_project", "select_existing"]
     if not config.has_project():
         options.remove("use_current_project")
-    selected_option = input_option(options)
+    selected_option = input_option(options, title="Project Creation Methods")
 
     # Actions
     project_commit = None

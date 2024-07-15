@@ -155,5 +155,12 @@ def decode_blob(blob: Optional[Blob] = None) -> str:
     """
     if blob is None:
         raise Exception("Expected blob to exist")
-    blob_str = blob.data_stream.read().decode("utf-8")
-    return cast(str, blob_str)
+    try:
+        return cast(str, blob.data_stream.read().decode("utf-8"))
+    except:
+        print("blob not utf-8 format.")
+    try:
+        return cast(str, blob.data_stream.read().decode("iso-8859-1"))
+
+    except Exception as e:
+        raise Exception("Blob is not a valid format.")

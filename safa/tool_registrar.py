@@ -2,6 +2,7 @@ from typing import Callable, Dict
 
 from safa.tools.committer import run_committer
 from safa.tools.configure import run_configure_account
+from safa.tools.jobs import run_job_module
 from safa.tools.projects.configure import run_configure_project
 from safa.tools.projects.delete import delete_project
 from safa.tools.projects.push import run_push_commit
@@ -18,6 +19,7 @@ TOOL_FUNCTIONS: Dict[str, Callable] = {
     "list_projects": list_projects,
     "project": run_configure_project,
     "account": run_configure_account,
+    "jobs": run_job_module
 
 }
 TOOL_PERMISSIONS = {
@@ -28,7 +30,8 @@ TOOL_PERMISSIONS = {
     "delete_project": ["user"],
     "list_projects": ["user"],
     "project": ["*"],
-    "account": ["*"]
+    "account": ["*"],
+    "jobs": ["user"]
 }
 TOOL_NAMES = {
     "committer": "Commit",
@@ -38,7 +41,8 @@ TOOL_NAMES = {
     "delete_project": "Delete",
     "list_projects": "List",
     "project": "Configure",
-    "account": "Settings"
+    "account": "Settings",
+    "jobs": "Jobs"
 }
 TOOL_GROUPS = {
     "Tools": [
@@ -47,13 +51,13 @@ TOOL_GROUPS = {
         "push_project",
     ],
     "Projects": [
-
         "delete_project",
         "list_projects",
         "refresh_project",
         "project"
     ],
-    "Account": [
-        "account"
+    "Safa": [
+        "account",
+        "jobs"
     ]
 }

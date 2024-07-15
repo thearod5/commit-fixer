@@ -9,6 +9,7 @@ from safa.utils.fs import clean_path, write_file_content
 CONFIG_FOLDER = ".safa"
 PROJECT_ENV_FILE = "project.env"
 USER_ENV_FILE = "user.env"
+ROOT_ENV_FILE = "root.env"
 CHROMA_FOLDER = "vector_store"
 CACHE_FILE = "cache.json"
 DEFAULT_BASE_URL = "https://dev.api.safa.ai"
@@ -24,11 +25,14 @@ class SafaConfig:
     :param cache_file_path: Path to file used to store database results (e.g. project data)
     """
     repo_path: str
+    # llm
+    llm_key: str
     # config specific
     config_path: str
     vector_store_path: str
     cache_file_path: str
     # -- env files
+    root_env_file_path: str
     user_env_file_path: str
     project_env_file_path: str
     # Account Settings
@@ -40,6 +44,7 @@ class SafaConfig:
     commit_id: Optional[str]
     # Property references
     user_env_properties = ["email", "password"]
+    root_env_properties = ["llm_key", "repo_path", "base_url"]
     project_env_properties = ["project_id", "version_id", "commit_id"]
     repr_properties = ["base_url", "repo_path", "email", "project_id", "version_id", "commit_id"]
     is_configured_paths = ["user_env_file_path", "project_env_file_path", "cache_file_path"]
@@ -61,7 +66,7 @@ class SafaConfig:
         :return: None
         """
         self.set_account(None, None)
-        self.__to_env()
+        self.save()
 
     def clear_project(self) -> None:
         """
@@ -69,7 +74,7 @@ class SafaConfig:
         :return: None
         """
         self.set_project(None, None, None)
-        self.__to_env()
+        self.save()
 
     def set_account(self, email: Optional[str], password: Optional[str]):
         """
@@ -80,7 +85,7 @@ class SafaConfig:
         """
         self.email = email
         self.password = password
-        self.__to_env()
+        self.save()
 
     def set_project(self, project_id: Optional[str], version_id: Optional[str], commit_id: Optional[str] = None):
         """
@@ -94,7 +99,7 @@ class SafaConfig:
         self.version_id = version_id
         self.commit_id = commit_id
 
-        self.__to_env()
+        self.save()
         print(f"New project has been set: https://app.safa.ai/versions/{self.version_id}")
 
     def set_commit_id(self, commit_id: str) -> None:
@@ -104,7 +109,7 @@ class SafaConfig:
         :return: None
         """
         self.commit_id = commit_id
-        self.__to_env()
+        self.save()
 
     def is_configured(self) -> bool:
         """
@@ -169,11 +174,12 @@ class SafaConfig:
             permissions.append("project")
         return permissions
 
-    def __to_env(self):
+    def save(self):
         """
         Converts config to env file.
         :return: None
         """
+        self.__write_env_file(self, self.root_env_properties, self.root_env_file_path)
         self.__write_env_file(self, self.project_env_properties, self.project_env_file_path)
         self.__write_env_file(self, self.user_env_properties, self.user_env_file_path)
 
@@ -195,15 +201,18 @@ class SafaConfig:
         project_env_file_path = os.path.join(config_path, PROJECT_ENV_FILE)
         vector_store_path = os.path.join(config_path, CHROMA_FOLDER)
         cache_file_path = os.path.join(config_path, CACHE_FILE)
+        root_env_file_path = root_env_file_path if root_env_file_path else os.path.join(config_path, ROOT_ENV_FILE)
 
         SafaConfig.__load_env_files(user_env_file_path, project_env_file_path, root_env_file_path)
 
         return SafaConfig(
             repo_path=repo_path,
+            llm_key=os.environ.get("SAFA_LLM_KEY"),
             # Config paths
             config_path=config_path,
             user_env_file_path=user_env_file_path,
             project_env_file_path=project_env_file_path,
+            root_env_file_path=root_env_file_path,
             cache_file_path=cache_file_path,
             vector_store_path=vector_store_path,
             # User Paths
@@ -216,14 +225,14 @@ class SafaConfig:
         )
 
     @staticmethod
-    def __load_env_files(*env_files: str) -> None:
+    def __load_env_files(*env_files: Optional[str]) -> None:
         """
         Loads list of env files in order, last one has highest precedence.
         :param env_files: List of env files.
         :return: None
         """
         for env_file in env_files:
-            if os.path.exists(env_file):
+            if env_file and os.path.exists(env_file):
                 load_dotenv(env_file)
 
     @staticmethod

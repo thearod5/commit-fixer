@@ -13,17 +13,16 @@ Generates commit summary for currently staged changes. Commits changes if user a
 
 # TODO:
 
-- [ ] Automated way to publish new packages
-    - Needs test suite to verify use cases are not broken
 - [ ] Be able to configure defaults
     - [x] Account
     - [x] Project
     - [x] Cache File
     - [ ] LLM Settings
+- [ ] Be able to re-summarize the artifacts that got changed in commit.
 - [ ] Chat with your project
 - [ ] Task manager
 - [ ] What does this line do? (feat; AST Summarization)
-- [ ] Be able to search only artifacts of specific type.
+- [x] Be able to search only artifacts of specific type.
 - [x] MVP:
     - Create new project / select existing
     - Import project

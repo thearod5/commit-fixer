@@ -1,4 +1,7 @@
+import time
 from typing import Callable, Dict, List, Optional, cast
+
+from tqdm import tqdm
 
 from safa.api.constants import SAFA_AUTH_TOKEN, STORE_PROJECT_KEY
 from safa.api.http_client import HttpClient
@@ -58,6 +61,7 @@ class SafaClient:
         :param kwargs: Additional keyword arguments to get_or_store
         :return: List of projects.
         """
+        print("...retrieving projects...")
         result = self.http_client.get("projects")
         return cast(List[Dict], result)
 
@@ -67,6 +71,7 @@ class SafaClient:
         :param project_id: ID of project whose versions are to be retrieved.
         :return: List of project versions objects.
         """
+        print("...retrieving project versions...")
         response = self.http_client.get(f"projects/{project_id}/versions")
         return cast(List[Dict], response)
 
@@ -88,6 +93,48 @@ class SafaClient:
         """
         response = self.http_client.post(f"projects/versions/{version_id}/summarize", data={})
         return cast(Dict, response)
+
+    def get_user_jobs(self) -> List[Dict]:
+        """
+        Retrieves list of jobs started by current user.
+        :return: List of jobs started by current user.
+        """
+        response = self.http_client.get(f"jobs/user")
+        return cast(List[Dict], response)
+
+    def get_job(self, job_id: str) -> Dict:
+        """
+        Retrieves job by ID.
+        :param job_id: ID of job.
+        :return: Job Dict.
+        """
+        jobs = self.get_user_jobs()
+        job_query = [job for job in jobs if job["id"] == job_id]
+
+        if len(job_query) == 0:
+            raise Exception("Job not found in user jobs.")
+        job = job_query[0]
+        return job
+
+    def wait_for_job(self, job_id: str):
+        """
+        Waits until jobs is finished.
+        :param job_id:
+        :return:
+        """
+        running = True
+        job = None
+        progress_bar = tqdm(desc="Waiting for Job...")
+        while running:
+            job = self.get_job(job_id)
+            if job["status"] == "IN_PROGRESS":
+                time.sleep(2)
+                progress_bar.update()
+            else:
+                running = False
+        progress_bar.close()
+        job_status = "NOT STARTED" if job is None else job["status"]
+        print(f"Job finished with status: {job_status}")
 
     def create_version(self, project_id: str, version_type: str) -> Dict:
         """

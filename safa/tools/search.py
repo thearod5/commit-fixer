@@ -4,8 +4,10 @@ from typing import Dict, List, Optional
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
+from tqdm import tqdm
 
 from safa.api.safa_client import SafaClient
+from safa.constants import LINE_LENGTH
 from safa.safa_config import SafaConfig
 from safa.utils.markdown import list_formatter
 from safa.utils.menus.printers import print_title
@@ -54,7 +56,14 @@ def create_vector_store(artifacts: List[Dict], vector_store_path: Optional[str] 
         return
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     documents = [get_artifact_document(a) for a in artifacts]
-    db = Chroma.from_documents(documents, embeddings, persist_directory=vector_store_path)
+    db = Chroma(embedding_function=embeddings, persist_directory=vector_store_path)
+
+    batch_size = 100  # Choose an appropriate batch size
+    indices = range(0, len(documents), batch_size)
+    for i in tqdm(indices, ncols=LINE_LENGTH):
+        batch = documents[i:i + batch_size]
+        db.add_documents(batch)
+
     return db
 
 
