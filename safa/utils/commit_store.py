@@ -1,15 +1,15 @@
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from safa.data.artifact import ArtifactJson
 from safa.data.commits import DiffDataType
 
 
 class CommitStore:
-    def __init__(self, artifact_store: Optional[Dict[str, ArtifactJson]] = None):
+    def __init__(self, version_data: Dict):
         """
         Creates store to keep track of current artifacts in a timeline of commits.
         """
-        self.artifact_store = artifact_store if artifact_store else {}
+        self.artifact_store = self.create_artifact_store(version_data["artifacts"])
         self.trace_store = {}
 
     def add_ids(self, commit_request: DiffDataType) -> None:
@@ -101,3 +101,13 @@ class CommitStore:
         :return: Trace ID.
         """
         return f"{trace['sourceName']}*{trace['targetName']}"
+
+    @staticmethod
+    def create_artifact_store(artifacts: List[Dict]) -> Dict[str, Dict]:
+        """
+        Creates map of artifact names to artifact.
+        :param artifacts: List of artifacts to store.
+        :return: Mapping.
+        """
+        artifact_store = {a["name"]: a for a in artifacts}
+        return artifact_store

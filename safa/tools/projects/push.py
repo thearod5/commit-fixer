@@ -43,8 +43,7 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
     commits = select_commits(repo)
 
     version_data = client.get_version(version_id)
-    artifact_store = {a["name"]: a["id"] for a in version_data["artifacts"]}
-    store = CommitStore(artifact_store=artifact_store)
+    store = CommitStore(version_data)
 
     for i, commit in tqdm(list(enumerate(commits)), ncols=LINE_LENGTH):
         # create new version
