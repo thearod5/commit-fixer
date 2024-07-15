@@ -1,5 +1,6 @@
 import os.path
-from typing import Dict, List, Optional
+import shutil
+from typing import Dict, List
 
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
@@ -49,11 +50,13 @@ def run_search(config: SafaConfig, client: SafaClient, done_title: str = "done",
         print(list_formatter(results), "\n")
 
 
-def create_vector_store(artifacts: List[Dict], vector_store_path: Optional[str] = None):
+def create_vector_store(artifacts: List[Dict], vector_store_path: str):
     print("...creating vector store...")
     if len(artifacts) == 0:
         print("No artifacts in project.")
         return
+    if os.path.exists(vector_store_path):
+        shutil.rmtree(vector_store_path)
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     documents = [get_artifact_document(a) for a in artifacts]
     db = Chroma(embedding_function=embeddings, persist_directory=vector_store_path)

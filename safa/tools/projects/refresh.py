@@ -1,4 +1,5 @@
 import os.path
+import shutil
 from typing import List
 
 import git
@@ -9,7 +10,6 @@ from safa.safa_config import SafaConfig
 from safa.tools.search import create_vector_store
 from safa.utils.commits import get_last_repo_commit
 from safa.utils.diffs import calculate_diff
-from safa.utils.fs import delete_dir
 from safa.utils.menus.printers import print_title
 
 
@@ -29,7 +29,7 @@ def refresh_project(config: SafaConfig, client: SafaClient) -> None:
     project_data = client.get_version(version_id)
     project_artifacts = project_data["artifacts"]
     if os.path.isdir(config.vector_store_path):
-        delete_dir(config.vector_store_path)
+        shutil.rmtree(config.vector_store_path)
     db = create_vector_store(project_artifacts, vector_store_path=config.vector_store_path)
 
 
