@@ -1,10 +1,11 @@
 from typing import Dict, List, Optional
 
+from safa.data.artifact import ArtifactJson
 from safa.data.commits import DiffDataType
 
 
 class CommitStore:
-    def __init__(self, artifact_store: Optional[Dict[str, str]] = None):
+    def __init__(self, artifact_store: Optional[Dict[str, ArtifactJson]] = None):
         """
         Creates store to keep track of current artifacts in a timeline of commits.
         """
@@ -36,14 +37,14 @@ class CommitStore:
         self._add_traces(commit_response["traces"]["added"])
         self._add_traces(commit_response["traces"]["modified"])
 
-    def _add_artifacts(self, artifacts: List[Dict]) -> None:
+    def _add_artifacts(self, artifacts: List[ArtifactJson]) -> None:
         """
         Adds artifacts to store.
         :param artifacts: Artifacts to add to store.
         :return: None
         """
         for artifact in artifacts:
-            self.artifact_store[artifact["name"]] = artifact["id"]
+            self.artifact_store[artifact["name"]] = artifact
 
     def _add_traces(self, traces: List[Dict]) -> None:
         """
@@ -55,7 +56,7 @@ class CommitStore:
             t_id = f"{trace['sourceName']}*{trace['targetName']}"
             self.trace_store[t_id] = trace["id"]
 
-    def _update_artifacts(self, artifacts: List[Dict]) -> None:
+    def _update_artifacts(self, artifacts: List[ArtifactJson]) -> None:
         """
         Updates artifacts with ID.
         :param artifacts: The artifacts to add id to.
@@ -65,7 +66,9 @@ class CommitStore:
             a_name = artifact["name"]
             if a_name not in self.artifact_store:
                 raise Exception("Artifact ({a_name}) has not been set in store.)")
-            artifact["id"] = self.artifact_store[artifact["name"]]
+            previous_artifact = self.artifact_store[a_name]
+            for key, value in previous_artifact.items():
+                artifact[key] = value if key != "body" else artifact[key]
 
     def _update_traces(self, traces: List[Dict]) -> None:
         """

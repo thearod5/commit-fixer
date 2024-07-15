@@ -2,6 +2,7 @@ from typing import Dict, Optional, TypedDict
 
 
 class ArtifactJson(TypedDict):
+    id: str
     name: str
     content: str
     summary: str
