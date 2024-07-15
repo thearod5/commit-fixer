@@ -60,9 +60,9 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
         is_last_commit = i == len(commits) - 1
 
         if is_last_commit:
-            last_commit_version_id = project_version["versionId"]
-            config.set_project(project_id, last_commit_version_id, commit_id=commit.hexsha)
             refresh_project(config, client, force=True)
+
+        config.set_project(project_id, project_version["versionId"], commit_id=commit.hexsha)
 
 
 def _get_version_type(iteration_idx: int, intervals: Tuple[int, int]):

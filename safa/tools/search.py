@@ -61,14 +61,18 @@ def create_vector_store(artifacts: List[Dict], vector_store_path: str):
         time.sleep(.1)  # just need some time to finish dir deletes
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     documents = [get_artifact_document(a) for a in artifacts]
-    db = Chroma(embedding_function=embeddings, persist_directory=vector_store_path)
 
-    batch_size = 100  # Choose an appropriate batch size
-    indices = range(0, len(documents), batch_size)
-    for i in tqdm(indices, ncols=LINE_LENGTH):
-        batch = documents[i:i + batch_size]
-        db.add_documents(batch)
-
+    try:
+        db = Chroma(embedding_function=embeddings, persist_directory=vector_store_path)
+        batch_size = 100  # Choose an appropriate batch size
+        indices = range(0, len(documents), batch_size)
+        for i in tqdm(indices, ncols=LINE_LENGTH):
+            batch = documents[i:i + batch_size]
+            db.add_documents(batch)
+    except Exception as e:
+        print(e)
+        print("Database failed again :(")
+        raise e
     return db
 
 
