@@ -19,7 +19,7 @@ def delete_project(config: SafaConfig, client: SafaClient) -> None:
     project_keys = list(project_lookup_map.keys())
     project_name = input_menu_paged(project_keys)
     selected_project = project_lookup_map[project_name]
-    if not input_confirm(f"Are you sure you want to delete project ({project_name})?", default_value="y"):
+    if not input_confirm(f"Are you sure you want to delete project ({project_name})?"):
         return
     project_id = selected_project['projectId']
     client.delete_project(selected_project['projectId'])

@@ -91,6 +91,7 @@ class SafaClient:
         :param version_id: ID of version of artifacts to use.
         :return: Job response.
         """
+        print("...starting summarize project job...")
         response = self.http_client.post(f"projects/versions/{version_id}/summarize", data={})
         return cast(Dict, response)
 

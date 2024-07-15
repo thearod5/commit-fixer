@@ -13,7 +13,7 @@ from safa.utils.diffs import calculate_diff
 from safa.utils.menus.printers import print_title
 
 
-def refresh_project(config: SafaConfig, client: SafaClient) -> None:
+def refresh_project(config: SafaConfig, client: SafaClient, force: bool = False) -> None:
     """
     Refresh project data.
     :param config: SAFA account and project configuration.
@@ -23,7 +23,11 @@ def refresh_project(config: SafaConfig, client: SafaClient) -> None:
     print_title("Refreshing Project Data")
     version_id = config.get_version_id()
 
-    _summarize_changed_files(config, client)
+    if force:
+        summarize_job = client.summarize(version_id)
+        client.wait_for_job(summarize_job["id"])
+    else:
+        _summarize_changed_files(config, client)
 
     client.store.delete(STORE_PROJECT_KEY, version_id)
     project_data = client.get_version(version_id)
