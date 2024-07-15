@@ -30,7 +30,7 @@ SUMMARIZE_FORMAT = {
 EMPTY_PROJECT_SUMMARY = "Project summary has not been generated yet."
 
 
-def generate_summary(file_changes: List[FileChange], project_summary: str) -> Tuple[str, List[str]]:
+def summarize_commit_changes(file_changes: List[FileChange], project_summary: str) -> Tuple[str, List[str]]:
     """
     Generates summary for list of changes.
     :param file_changes: File changes to summarize into one commit.

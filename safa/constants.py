@@ -30,3 +30,4 @@ usage_msg = (
         ```Usage: $ safa [REPO_PATH] [ENV_FILE_PATH]```
     """
 )
+CODE_TYPE = "Code"

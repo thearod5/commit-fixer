@@ -19,7 +19,7 @@ def select_commits(repo: Repo) -> List[Commit]:
     commit_import_options = ["last commit", "single commit", "multiple commits"]
     commit_import_option = input_option(commit_import_options)
     if commit_import_option == "last commit":
-        commits: List[Commit] = [get_repo_commit(repo)]
+        commits: List[Commit] = [get_last_repo_commit(repo)]
     elif commit_import_option == "single commit":
         commits: List[Commit] = [cast(Commit, input_commit(repo, many=False))]
     elif commit_import_option == "multiple commits":
@@ -51,7 +51,7 @@ def input_commit(repo: Repo, **kwargs) -> Commit | List[Commit]:
     return id2commit[selected_commit_ids]
 
 
-def get_repo_commit(repo: Optional[git.Repo] = None, repo_path: Optional[str] = None) -> Commit:
+def get_last_repo_commit(repo: Optional[git.Repo] = None, repo_path: Optional[str] = None) -> Commit:
     """
     Returns the last commit at given repo.
     :param repo: Repository to pull commits.

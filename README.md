@@ -13,6 +13,7 @@ Generates commit summary for currently staged changes. Commits changes if user a
 
 # TODO:
 
+- [ ] Move store to config so that it can be accessed everywhere
 - [ ] Be able to configure defaults
     - [x] Account
     - [x] Project

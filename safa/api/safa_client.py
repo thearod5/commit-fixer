@@ -53,7 +53,7 @@ class SafaClient:
             project_data = self.http_client.get(f"projects/versions/{version_id}")
             return project_data
 
-        return self.get_or_store(STORE_PROJECT_KEY, version_id, get_data, **kwargs)
+        return self._get_or_store(STORE_PROJECT_KEY, version_id, get_data, **kwargs)
 
     def get_projects(self, **kwargs) -> List[Dict]:
         """
@@ -147,23 +147,6 @@ class SafaClient:
         project_version = self.http_client.post(f"projects/{project_id}/versions/{version_type}")
         return cast(Dict, project_version)
 
-    def get_or_store(self, entity_type: str, entity_id: str, get_lambda: Callable, use_store: bool = True) -> Dict:
-        """
-        Checks store for entity, if found returns it, otherwise get_lambda is called and processed.
-        :param entity_type: The type of entity being retrieved.
-        :param entity_id: ID of entity.
-        :param get_lambda: Callable used to retrieve entity data.
-        :param use_store: Whether to use store to save results.
-        :return: The entity data.
-        """
-        if use_store and self.store.has(entity_type, entity_id):
-            return cast(Dict, self.store.get(entity_type, entity_id))
-        else:
-            entity_data = get_lambda()
-            if use_store:
-                self.store.save(entity_type, entity_id, entity_data)
-            return cast(Dict, entity_data)
-
     def search_by_prompt(self, query: str, version_id: str, search_types: List[str]) -> List[str]:
         """
         Searches artifacts against query.
@@ -198,3 +181,29 @@ class SafaClient:
         :return: Response to request.
         """
         self.http_client.delete(f"projects/{project_id}")
+
+    def summarize_artifacts(self, version_id: str, artifact_ids: List[str]):
+        """
+        Summarizes artifacts given.
+        :return:
+        """
+        endpoint = f"projects/versions/{version_id}/artifacts/summarize"
+        payload = {"artifacts": artifact_ids}
+        return self.http_client.post(endpoint, data=payload)
+
+    def _get_or_store(self, entity_type: str, entity_id: str, get_lambda: Callable, use_store: bool = True) -> Dict:
+        """
+        Checks store for entity, if found returns it, otherwise get_lambda is called and processed.
+        :param entity_type: The type of entity being retrieved.
+        :param entity_id: ID of entity.
+        :param get_lambda: Callable used to retrieve entity data.
+        :param use_store: Whether to use store to save results.
+        :return: The entity data.
+        """
+        if use_store and self.store.has(entity_type, entity_id):
+            return cast(Dict, self.store.get(entity_type, entity_id))
+        else:
+            entity_data = get_lambda()
+            if use_store:
+                self.store.save(entity_type, entity_id, entity_data)
+            return cast(Dict, entity_data)
