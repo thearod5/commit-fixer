@@ -1,5 +1,6 @@
 import os.path
 import shutil
+import time
 from typing import Dict, List
 
 from langchain_community.vectorstores import Chroma
@@ -57,6 +58,7 @@ def create_vector_store(artifacts: List[Dict], vector_store_path: str):
         return
     if os.path.exists(vector_store_path):
         shutil.rmtree(vector_store_path)
+        time.sleep(.1)  # just need some time to finish dir deletes
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     documents = [get_artifact_document(a) for a in artifacts]
     db = Chroma(embedding_function=embeddings, persist_directory=vector_store_path)
