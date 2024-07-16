@@ -90,7 +90,7 @@ def configure_repo_path() -> str:
     return repo_path
 
 
-def run_configure_account(config: SafaConfig) -> None:
+def run_configure_account(config: SafaConfig, *args) -> None:
     """
     Configures account email and password.
     :param config: Configuration used to set account details in.

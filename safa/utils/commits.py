@@ -16,13 +16,11 @@ def select_commits(repo: Repo) -> List[Commit]:
     :param repo: The repository to select commits from.
     :return: List of commits to import.
     """
-    commit_import_options = ["last commit", "single commit", "multiple commits"]
+    commit_import_options = ["last commit", "select commits"]
     commit_import_option = input_option(commit_import_options)
     if commit_import_option == "last commit":
         commits: List[Commit] = [get_last_repo_commit(repo)]
-    elif commit_import_option == "single commit":
-        commits: List[Commit] = [cast(Commit, input_commit(repo, many=False))]
-    elif commit_import_option == "multiple commits":
+    elif commit_import_option == "select commits":
         commits = cast(List[Commit], input_commit(repo, many=True))
     else:
         raise Exception(f"Expected answer to be one of {commit_import_options}")

@@ -182,6 +182,7 @@ class SafaConfig:
         self.__write_env_file(self, self.root_env_properties, self.root_env_file_path)
         self.__write_env_file(self, self.project_env_properties, self.project_env_file_path)
         self.__write_env_file(self, self.user_env_properties, self.user_env_file_path)
+        print("Safa configuration has been saved.")
 
     @staticmethod
     def from_repo(repo_path: str, root_env_file_path: Optional[str] = None) -> "SafaConfig":
@@ -253,4 +254,3 @@ class SafaConfig:
             return
         env_content = "\n".join(env_line_items)
         write_file_content(env_file_path, env_content)
-        print(f"Configuration file written to {env_file_path}")

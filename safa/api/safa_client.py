@@ -95,6 +95,16 @@ class SafaClient:
         response = self.http_client.post(f"projects/versions/{version_id}/summarize", data={})
         return cast(Dict, response)
 
+    def summarize_artifacts(self, version_id: str, artifact_ids: List[str]):
+        """
+        Summarizes artifacts given.
+        :return:
+        """
+        print("...summarizing artifacts...")
+        endpoint = f"projects/versions/{version_id}/artifacts/summarize"
+        payload = {"artifacts": artifact_ids}
+        return self.http_client.post(endpoint, data=payload)
+
     def get_user_jobs(self) -> List[Dict]:
         """
         Retrieves list of jobs started by current user.
@@ -182,15 +192,6 @@ class SafaClient:
         :return: Response to request.
         """
         self.http_client.delete(f"projects/{project_id}")
-
-    def summarize_artifacts(self, version_id: str, artifact_ids: List[str]):
-        """
-        Summarizes artifacts given.
-        :return:
-        """
-        endpoint = f"projects/versions/{version_id}/artifacts/summarize"
-        payload = {"artifacts": artifact_ids}
-        return self.http_client.post(endpoint, data=payload)
 
     def _get_or_store(self, entity_type: str, entity_id: str, get_lambda: Callable, use_store: bool = True) -> Dict:
         """

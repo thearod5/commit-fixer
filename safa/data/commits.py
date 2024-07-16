@@ -14,3 +14,21 @@ class DeltaType(TypedDict, Generic[EntityType]):
 class DiffDataType(TypedDict):
     artifacts: DeltaType
     traces: DeltaType
+
+
+def create_empty_diff() -> "DiffDataType":
+    """
+    Creates empty diff.
+    :return: The safa commit dict containing an empty diff.
+    """
+    return {
+        "artifacts": {
+            "added": [],
+            "removed": [],
+            "modified": []
+        }, "traces": {
+            "added": [],
+            "removed": [],
+            "modified": []
+        }
+    }

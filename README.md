@@ -19,10 +19,10 @@ Generates commit summary for currently staged changes. Commits changes if user a
     - [x] Project
     - [x] Cache File
     - [ ] LLM Settings
-- [ ] Be able to re-summarize the artifacts that got changed in commit.
 - [ ] Chat with your project
-- [ ] Task manager
+- [ ] Task manager (e.g. embedding change impact analysis, llm lookie look, and change recommendation)
 - [ ] What does this line do? (feat; AST Summarization)
+- [x] Be able to re-summarize the artifacts that got changed in commit.
 - [x] Be able to search only artifacts of specific type.
 - [x] MVP:
     - Create new project / select existing
