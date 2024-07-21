@@ -9,8 +9,8 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from tqdm import tqdm
 
 from safa.api.safa_client import SafaClient
+from safa.config.safa_config import SafaConfig
 from safa.constants import LINE_LENGTH
-from safa.safa_config import SafaConfig
 from safa.utils.markdown import list_formatter
 from safa.utils.menus.printers import print_title
 
@@ -25,15 +25,16 @@ def run_search(config: SafaConfig, client: SafaClient, done_title: str = "done",
     :return: None
     """
     print_title("Search Project")
-    version_id = config.get_version_id()
+    version_id = config.project_config.get_version_id()
     project_data = client.get_version(version_id)
+    vector_store_path = config.get_vector_store_path()
 
-    if os.path.isdir(config.vector_store_path):  # user should refresh if they want to create new one
+    if os.path.isdir(vector_store_path):  # user should refresh if they want to create new one
         print("...reloading vector store...")
         db = Chroma(embedding_function=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2"),
-                    persist_directory=config.vector_store_path)
+                    persist_directory=vector_store_path)
     else:
-        db = create_vector_store(project_data["artifacts"], vector_store_path=config.vector_store_path)
+        db = create_vector_store(project_data["artifacts"], vector_store_path=vector_store_path)
 
     project_artifact_types = [t["name"] for t in project_data["artifactTypes"]]
     search_types = input(f"Search Types ({','.join(project_artifact_types)}):").strip().split(",")

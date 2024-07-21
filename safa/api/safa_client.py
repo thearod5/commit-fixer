@@ -6,8 +6,8 @@ from tqdm import tqdm
 from safa.api.constants import SAFA_AUTH_TOKEN, STORE_PROJECT_KEY
 from safa.api.http_client import HttpClient
 from safa.api.safa_store import SafaStore
+from safa.config.safa_config import SafaConfig
 from safa.data.commits import DiffDataType
-from safa.safa_config import SafaConfig
 
 
 class SafaClient:
@@ -34,8 +34,8 @@ class SafaClient:
         if config is None and (email is None or password is None):
             raise Exception("Expected config or email and password.")
         if config:
-            email = config.email
-            password = config.password
+            email = config.user_config.email
+            password = config.user_config.password
         self.http_client.post("login", {"email": email, "password": password})
         if SAFA_AUTH_TOKEN not in self.http_client.session.cookies:
             raise Exception("Login failed, SAFA-TOKEN not found in cookies")

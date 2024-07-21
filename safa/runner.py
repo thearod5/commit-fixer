@@ -16,7 +16,7 @@ from safa.tool_registrar import TOOL_FUNCTIONS, TOOL_GROUPS, TOOL_NAMES, TOOL_PE
 from safa.utils.fs import clean_path
 from safa.utils.menus.printers import print_title
 
-from safa.safa_config import SafaConfig
+from safa.config.safa_config import SafaConfig
 from safa.utils.menus.inputs import input_option
 
 
@@ -30,7 +30,7 @@ def main() -> None:
     print("\n", safa_banner.strip(), "\n\n")
 
     config = SafaConfig.from_repo(repo_path, root_env_file_path=env_file_path)
-    if not config.has_account() or not config.has_project() or not config.has_commit_id():
+    if not config.user_config.is_configured() or not config.project_config.is_configured():
         configure(config)
 
     client = create_safa_client(config)

@@ -6,9 +6,9 @@ from git import Commit
 from tqdm import tqdm
 
 from safa.api.safa_client import SafaClient
+from safa.config.safa_config import SafaConfig
 from safa.constants import LINE_LENGTH
 from safa.data.commits import DiffDataType, create_empty_diff
-from safa.safa_config import SafaConfig
 from safa.utils.commit_store import CommitStore
 from safa.utils.commits import select_commits
 from safa.utils.diffs import calculate_diff
@@ -30,16 +30,16 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
     :return: None
     """
     print_title("Pushing Commits to Project")
-    if not config.has_project():
+    if not config.project_config.is_configured():
         print("Please configure project before pushing.")
         return
 
-    repo = git.Repo(config.repo_path)
+    repo = git.Repo(config.repo_config.repo_path)
     s_commit: Optional[Commit] = None
 
-    project_id, version_id = config.get_project_config()
-    if config.has_commit_id():
-        s_commit = repo.commit(config.get_commit_id())
+    project_id, version_id = config.project_config.get_project_config()
+    if config.project_config.has_commit_id():
+        s_commit = repo.commit(config.project_config.get_commit_id())
     commits = select_commits(repo)
 
     version_data = client.get_version(version_id)
@@ -55,7 +55,7 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
         commit_data = calculate_diff(repo, commit, starting_commit=s_commit, prefix=f"{version_repr(project_version)}: ")
         store.add_ids(commit_data)
         commit_response = client.commit(version_id, commit_data)
-        config.set_project(project_id, version_id, commit_id=commit.hexsha)
+        config.project_config.set_project(project_id, version_id, commit_id=commit.hexsha)
         store.save_ids(commit_response)
         summary_commit_data = _summarize_changed_files(config, client, commit_response)
         if summary_commit_data:
@@ -79,7 +79,7 @@ def _summarize_changed_files(config: SafaConfig, client: SafaClient, diff: DiffD
     :param config: Configuration to SAFA account and project.
     :return: The commit request containing the new artifact summaries.
     """
-    version_id = config.get_version_id()
+    version_id = config.project_config.get_version_id()
     changed_artifacts = diff["artifacts"]["modified"] + diff["artifacts"]["added"]
     id2artifact = {a["id"]: a for a in changed_artifacts}
     artifact_ids = list(id2artifact.keys())

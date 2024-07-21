@@ -1,5 +1,5 @@
 from safa.api.safa_client import SafaClient
-from safa.safa_config import SafaConfig
+from safa.config.safa_config import SafaConfig
 
 
 def run_create_project(config: SafaConfig, client: SafaClient):
@@ -16,4 +16,4 @@ def run_create_project(config: SafaConfig, client: SafaClient):
     project_id = project_data["projectId"]
     version_id = project_data["projectVersion"]["versionId"]
 
-    config.set_project(project_id, version_id, commit_id=None)
+    config.project_config.set_project(project_id, version_id, commit_id=None)

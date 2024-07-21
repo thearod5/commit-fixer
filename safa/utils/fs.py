@@ -1,7 +1,7 @@
 import json
 import os
 import shutil
-from typing import Any, Dict, List, Tuple, Union, cast
+from typing import Any, Dict, cast
 
 
 def write_file_content(file_path: str, file_content: str) -> None:
@@ -23,40 +23,6 @@ def write_json(file_path: str, json_dict: Dict) -> None:
     :return: None
     """
     write_file_content(file_path, json.dumps(json_dict))
-
-
-def list_python_files(directory_paths: Union[List[str], str]):
-    """
-    Returns a list of Python file paths contained within the given directory.
-
-    Parameters:
-    directory_path (str): The path to the directory to search for Python files.
-
-    Returns:
-    list: A list of Python file paths.
-    """
-    if isinstance(directory_paths, str):
-        directory_paths = [directory_paths]
-    python_files = []
-
-    # Walk through the directory
-    for directory_path in directory_paths:
-        for root, _, files in os.walk(directory_path):
-            for file in files:
-                # Check if the file is a Python file
-                if file.endswith(".py"):
-                    python_files.append(os.path.join(root, file))
-
-    return python_files
-
-
-def list_paths(dir_path: str) -> List[Tuple[str, str]]:
-    """
-    Lists full paths and file names in directory.
-    :param dir_path: Path to directory.
-    :return: List of tuples.
-    """
-    return [(os.path.join(dir_path, p), p) for p in os.listdir(dir_path)]
 
 
 def clean_path(p: str) -> str:

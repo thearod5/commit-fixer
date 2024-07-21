@@ -3,9 +3,9 @@ from typing import Dict, List, Optional, Tuple
 import git
 
 from safa.api.safa_client import SafaClient
+from safa.config.safa_config import SafaConfig
 from safa.data.artifact import ArtifactJson
 from safa.data.file_change import FileChange
-from safa.safa_config import SafaConfig
 from safa.utils.commits import print_commit_message, to_commit_message
 from safa.utils.diff_summary import summarize_commit_changes
 from safa.utils.git_helpers import get_file_content_before, get_staged_diffs, stage_files
@@ -24,7 +24,7 @@ def run_committer(config: SafaConfig, client: SafaClient) -> None:
     project_data = get_project_data(config, client)
     artifact_map = create_artifact_name_lookup(project_data["artifacts"])
 
-    repo = git.Repo(config.repo_path)
+    repo = git.Repo(config.repo_config.repo_path)
     stage_files(repo)
     file2diff = get_staged_diffs(repo)
     if len(file2diff) == 0:
@@ -96,7 +96,7 @@ def get_project_data(config: SafaConfig, client: SafaClient):
     :return: The project data.
     """
     print("...retrieving safa project...")
-    project_data = client.get_version(config.get_version_id())
+    project_data = client.get_version(config.project_config.get_version_id())
     print("Project Name: ", project_data["name"])
     return project_data
 

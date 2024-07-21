@@ -75,8 +75,8 @@ def create_commit_artifact(repo: Repo, commit: Commit, prefix: str = "") -> Dict
     title, changes = from_commit_message(commit_message)
     return {
         "name": f"{prefix}{title}",
-        "summary": "\n".join(changes),
-        "body": diff,
+        "summary": "",
+        "body": "\n".join(changes),
         "type": "Commit"
     }
 

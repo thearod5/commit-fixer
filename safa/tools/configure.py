@@ -16,12 +16,12 @@ from safa.utils.menus.printers import print_title
 SRC_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(SRC_PATH)
 
-from safa.safa_config import SafaConfig
+from safa.config.safa_config import SafaConfig
 from safa.utils.menus.inputs import input_confirm
 
 configure_message_template = (
     """
-Looks like SAFA needs to configure a few things:
+SAFA needs to configure a few things:
 - [{}] User
 - [{}] Project
 - [{}] Commit
@@ -31,11 +31,11 @@ Looks like SAFA needs to configure a few things:
 
 def configure(config: SafaConfig) -> SafaClient:
     print_title("Safa Configuration")
-    print(f"\nRepository Root: {config.repo_path}\n")
+    print(f"\nRepository Root: {config.repo_config.repo_path}\n")
 
-    if not os.path.isdir(config.config_path):
+    if not os.path.isdir(config.config_dir_path):
         if input_confirm("Is this the root of your repository?", default_value="y"):
-            os.makedirs(config.config_path, exist_ok=True)
+            os.makedirs(config.config_dir_path, exist_ok=True)
 
         else:
             print(usage_msg)
@@ -49,23 +49,22 @@ def configure(config: SafaConfig) -> SafaClient:
         print("Okay :)")
         sys.exit(-1)
 
-    write_json(config.cache_file_path, {})
+    write_json(config.get_cache_file_path(), {})
 
-    if config.llm_key is None:
-        config.llm_key = getpass("Anthropic API Key:")
-        config.save()
+    if not config.llm_config.is_configured():
+        config.llm_config.set_key(getpass("Anthropic API Key:"))
 
-    if not config.has_account():
+    if not config.user_config.has_account():
         print_title("Account Configuration", factor=0.5)
         run_configure_account(config)
 
     client = create_safa_client(config)
 
-    if not config.has_project():
+    if not config.project_config.has_project():
         print_title("Project Configuration")
         run_configure_project(config, client)
 
-    if not config.has_commit_id():
+    if not config.project_config.has_commit_id():
         print_title("Commit Configuration")
         run_push_commit(config, client, set_as_current_project=True)
 
@@ -96,15 +95,15 @@ def run_configure_account(config: SafaConfig, *args) -> None:
     :param config: Configuration used to set account details in.
     :return:None
     """
-    if config.has_account():
-        if input_confirm(f"Would you like to override your current account ({config.email})?", default_value="n"):
-            config.clear_account()
+    if config.user_config.has_account():
+        if input_confirm(f"Would you like to override your current account ({config.user_config.email})?", default_value="n"):
+            config.user_config.clear_account()
             return run_configure_account(config)
         return
 
     email = input("Safa Account Email:")
     password = getpass("Safa Account Password:")
-    config.set_account(email, password)
+    config.user_config.set_account(email, password)
 
 
 def get_config_status(config: SafaConfig) -> Tuple[str, str, str]:
@@ -113,7 +112,7 @@ def get_config_status(config: SafaConfig) -> Tuple[str, str, str]:
     :param config: Safa config.
     :return: User, Project, and Commit status.
     """
-    user_status = "x" if config.has_account() else " "
-    project_status = "x" if config.has_project() else " "
-    commit_status = "x" if config.has_commit_id() else " "
+    user_status = "x" if config.user_config.has_account() else " "
+    project_status = "x" if config.project_config.has_project() else " "
+    commit_status = "x" if config.project_config.has_commit_id() else " "
     return user_status, project_status, commit_status

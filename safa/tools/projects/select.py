@@ -1,7 +1,7 @@
 from typing import Dict, Tuple
 
 from safa.api.safa_client import SafaClient
-from safa.safa_config import SafaConfig
+from safa.config.safa_config import SafaConfig
 from safa.utils.menus.page_menu import input_menu_paged
 from safa.utils.menus.printers import version_repr
 
@@ -27,7 +27,7 @@ def run_select_project(config: SafaConfig, client: SafaClient) -> Tuple[str, str
     selected_version = name2versions[selected_version_name]
     version_id = selected_version["versionId"]
 
-    config.set_project(project_id, version_id)
+    config.project_config.set_project(project_id, version_id)
 
     return project_id, version_id
 

@@ -31,3 +31,21 @@ usage_msg = (
     """
 )
 CODE_TYPE = "Code"
+
+#
+# Config
+#
+CONFIG_FOLDER = ".safa"
+VECTOR_STORE_FOLDER_NAME = "vector_store"
+CACHE_FILE = "cache.json"
+DEFAULT_BASE_URL = "https://dev.api.safa.ai"
+
+PROJECT_ENV_FILE = "project.env"
+LLM_ENV_FILE = "llm.env"
+USER_ENV_FILE = "user.env"
+ROOT_ENV_FILE = "root.env"
+
+#
+# Datetime
+#
+SAFA_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
