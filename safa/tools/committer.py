@@ -9,6 +9,7 @@ from safa.data.file_change import FileChange
 from safa.utils.commits import print_commit_message, to_commit_message
 from safa.utils.diff_summary import summarize_commit_changes
 from safa.utils.git_helpers import get_file_content_before, get_staged_diffs, stage_files
+from safa.utils.llm_manager import get_llm_manager
 from safa.utils.menus.inputs import input_int, input_option
 from safa.utils.menus.printers import print_title
 
@@ -31,7 +32,8 @@ def run_committer(config: SafaConfig, client: SafaClient) -> None:
         print("No changes staged for commit.")
     else:
         file_changes = create_file_changes(file2diff, artifact_map, repo)
-        title, changes = summarize_commit_changes(file_changes, project_data["specification"])
+        llm_manager = get_llm_manager(config.llm_config)
+        title, changes = summarize_commit_changes(llm_manager, file_changes, project_data["specification"])
         run_commit_menu(repo, title, changes)
 
 

@@ -25,6 +25,7 @@ SAFA needs to configure a few things:
 - [{}] User
 - [{}] Project
 - [{}] Commit
+- [{}] LLM
     """
 )
 
@@ -106,7 +107,7 @@ def run_configure_account(config: SafaConfig, *args) -> None:
     config.user_config.set_account(email, password)
 
 
-def get_config_status(config: SafaConfig) -> Tuple[str, str, str]:
+def get_config_status(config: SafaConfig) -> Tuple[str, str, str, str]:
     """
     Returns the status of the configuration for each entity.
     :param config: Safa config.
@@ -115,4 +116,5 @@ def get_config_status(config: SafaConfig) -> Tuple[str, str, str]:
     user_status = "x" if config.user_config.has_account() else " "
     project_status = "x" if config.project_config.has_project() else " "
     commit_status = "x" if config.project_config.has_commit_id() else " "
-    return user_status, project_status, commit_status
+    llm_status = "x" if config.llm_config.is_configured() else " "
+    return user_status, project_status, commit_status, llm_status

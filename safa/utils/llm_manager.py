@@ -1,7 +1,8 @@
-import os
 from typing import Callable, Dict, Tuple, Union
 
 from langchain_anthropic import ChatAnthropic
+
+from safa.config.llm_config import LLMConfig
 
 MessageType = Tuple[str, str]
 
@@ -13,13 +14,10 @@ ALLOWED_MANAGERS: Dict[str, Callable[[str], ChatAnthropic]] = {
 }
 
 
-def get_llm_manager() -> ChatAnthropic:
+def get_llm_manager(llm_config: LLMConfig) -> ChatAnthropic:
     """
     Reads LLM manager from env variables.
     :return: LLM Manager
     """
-    llm_key = os.environ["SAFA_LLM_KEY"]
-
-    # Initialize the LLM providers
-    llm_manager = ALLOWED_MANAGERS[DEFAULT_LLM_MANAGER](llm_key)
+    llm_manager = ALLOWED_MANAGERS[llm_config.llm_provider](llm_config.llm_key)
     return llm_manager

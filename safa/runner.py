@@ -30,7 +30,7 @@ def main() -> None:
     print("\n", safa_banner.strip(), "\n\n")
 
     config = SafaConfig.from_repo(repo_path, root_env_file_path=env_file_path)
-    if not config.user_config.is_configured() or not config.project_config.is_configured():
+    if not config.is_configured():
         configure(config)
 
     client = create_safa_client(config)

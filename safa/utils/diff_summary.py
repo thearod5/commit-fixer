@@ -2,7 +2,6 @@ import json
 from typing import Dict, List, Tuple, cast
 
 from safa.data.file_change import FileChange
-from safa.utils.llm_manager import get_llm_manager
 
 SUMMARIZE_INSTRUCTIONS = """
 You are a AI agent working on a software project to help users document their development practices.
@@ -30,9 +29,10 @@ SUMMARIZE_FORMAT = {
 EMPTY_PROJECT_SUMMARY = "Project summary has not been generated yet."
 
 
-def summarize_commit_changes(file_changes: List[FileChange], project_summary: str) -> Tuple[str, List[str]]:
+def summarize_commit_changes(llm_manager, file_changes: List[FileChange], project_summary: str) -> Tuple[str, List[str]]:
     """
     Generates summary for list of changes.
+    :param llm_manager: LLM manager used to summarize file changes.
     :param file_changes: File changes to summarize into one commit.
     :param project_summary: The project summary to include in system description.
     :return: Title and changes across files.
@@ -45,7 +45,7 @@ def summarize_commit_changes(file_changes: List[FileChange], project_summary: st
         ("human", prompt)
     ]
     print("...generating...")
-    llm_manager = get_llm_manager()
+
     response = cast(str, llm_manager.invoke(messages).content)
     response_json = parse_json(response)
     diff_summaries = response_json["changes"]
