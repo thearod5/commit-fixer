@@ -49,3 +49,8 @@ ROOT_ENV_FILE = "root.env"
 # Datetime
 #
 SAFA_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
+
+#
+# Committer
+#
+SUMMARIZATION_THRESHOLD = 25

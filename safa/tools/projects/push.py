@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import Optional, Tuple, cast
 
 import git
@@ -7,7 +8,7 @@ from tqdm import tqdm
 
 from safa.api.safa_client import SafaClient
 from safa.config.safa_config import SafaConfig
-from safa.constants import LINE_LENGTH
+from safa.constants import LINE_LENGTH, SUMMARIZATION_THRESHOLD
 from safa.data.commits import DiffDataType, create_empty_diff
 from safa.utils.commit_store import CommitStore
 from safa.utils.commits import select_commits
@@ -30,8 +31,9 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
     :return: None
     """
     print_title("Pushing Commits to Project")
-    if not config.project_config.is_configured():
+    if not config.project_config.has_project():
         print("Please configure project before pushing.")
+        sys.exit(-1)
         return
 
     repo = git.Repo(config.repo_config.repo_path)
@@ -89,13 +91,19 @@ def _summarize_changed_files(config: SafaConfig, client: SafaClient, diff: DiffD
         return None
 
     print(f"... found {len(id2artifact)} changed artifacts...")
-    summarized_artifacts = client.summarize_artifacts(version_id, artifact_ids)
-    summary_diff = create_empty_diff()
-    for a_summarized in summarized_artifacts:
-        artifact = id2artifact[a_summarized["id"]]
-        artifact["summary"] = a_summarized["summary"]
-        summary_diff["artifacts"]["modified"].append(artifact)
 
+    if len(artifact_ids) <= SUMMARIZATION_THRESHOLD:
+        summarized_artifacts = client.summarize_artifacts(version_id, artifact_ids)
+        summary_diff = create_empty_diff()
+        for a_summarized in summarized_artifacts:
+            artifact = id2artifact[a_summarized["id"]]
+            artifact["summary"] = a_summarized["summary"]
+            summary_diff["artifacts"]["modified"].append(artifact)
+    else:
+        print(f"Found more than threshold ({SUMMARIZATION_THRESHOLD}) changed artifacts...")
+        summarization_job = client.summarize(version_id)
+        client.wait_for_job(summarization_job["id"])
+        return None
     return summary_diff
 
 
