@@ -15,7 +15,7 @@ def delete_project(config: SafaConfig, client: SafaClient) -> None:
     if len(projects) == 0:
         print("User has no projects.")
         return
-    project_lookup_map = {p["name"]: p for p in projects}
+    project_lookup_map = {f"{p['name']}:{p['lastEdited']}": p for p in projects}
     project_keys = list(project_lookup_map.keys())
     project_name = input_menu_paged(project_keys)
     selected_project = project_lookup_map[project_name]

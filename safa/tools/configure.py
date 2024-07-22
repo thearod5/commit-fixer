@@ -1,6 +1,6 @@
+import getpass
 import os
 import sys
-from getpass import getpass
 from typing import Tuple
 
 from dotenv import load_dotenv
@@ -53,7 +53,8 @@ def configure(config: SafaConfig) -> SafaClient:
     write_json(config.get_cache_file_path(), {})
 
     if not config.llm_config.is_configured():
-        config.llm_config.set_key(getpass("Anthropic API Key:"))
+        llm_key = getpass.getpass("Anthropic API Key:")
+        config.llm_config.set_key(llm_key)
 
     if not config.user_config.has_account():
         print_title("Account Configuration", factor=0.5)
@@ -103,7 +104,7 @@ def run_configure_account(config: SafaConfig, *args) -> None:
         return
 
     email = input("Safa Account Email:")
-    password = getpass("Safa Account Password:")
+    password = getpass.getpass("Safa Account Password:")
     config.user_config.set_account(email, password)
 
 

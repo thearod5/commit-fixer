@@ -35,16 +35,18 @@ class ConfigFactory(Generic[ConfigType]):
         """
         obj_properties = ConfigFactory.get_config_properties(obj)
 
-        construction_dict = {}
+        construction_dict = {**kwargs}
         for obj_property in obj_properties:
+            env_prop_name = ConfigFactory.prop_to_env(obj_property)
             if obj_property in kwargs:
                 continue
+            elif env_prop_name in os.environ:
+                construction_dict[obj_property] = os.environ[env_prop_name]
             elif hasattr(obj, obj_property):
                 construction_dict[obj_property] = getattr(obj, obj_property)
             else:
-                obj_property_env_name = ConfigFactory.prop_to_env(obj_property)
-                construction_dict[obj_property] = os.environ.get(obj_property_env_name, None)
-        obj_instance = obj(**construction_dict, **kwargs)
+                construction_dict[obj_property] = None
+        obj_instance = obj(**construction_dict)
         return obj_instance
 
     @staticmethod

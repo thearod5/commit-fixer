@@ -1,0 +1,26 @@
+# Configuration Start
+
+y # proceed
+
+# LLM Configuration
+
+$ANTHROPIC_API_KEY # llm key
+
+# Account Configuration
+
+$EMAIL
+$PASSWORD
+
+# Create new project
+
+0 # create new project
+test-1 # new project name
+test-description # new project description
+
+# Commit Configuration
+
+0 # last commit
+0 # create new major version for commit -> send to safa
+
+# Exit
+9 # exit option

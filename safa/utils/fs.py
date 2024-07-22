@@ -51,6 +51,8 @@ def read_json_file(file_path: str, init_if_empty: bool = True) -> Dict[str, Any]
     :param init_if_empty: Initializes empty dictionary in file.
     :return: File JSON as object.
     """
+    if not os.path.isfile(file_path) and init_if_empty:
+        write_json(file_path, {})
     file_content = read_file(file_path)
     if init_if_empty and len(file_content) == 0:
         return {}

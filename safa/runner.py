@@ -1,10 +1,11 @@
 import argparse
 import os
 import sys
-from typing import Dict, List, OrderedDict
+from typing import Dict, List, Optional, OrderedDict
 
 import urllib3
 
+from safa.api.safa_client import SafaClient
 from safa.tools.configure import configure
 
 SRC_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -38,6 +39,10 @@ def main() -> None:
     print_title("Configuration")
     print(config)
 
+    run_tool_loop(config, client, tool=tool)
+
+
+def run_tool_loop(config: SafaConfig, client: SafaClient, tool: Optional[str] = None):
     running = True
     while running:
         tools, tool2name, group2tools = filter_tools_by_permissions(TOOL_NAMES,
