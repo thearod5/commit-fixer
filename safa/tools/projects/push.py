@@ -13,7 +13,7 @@ from safa.data.commits import DiffDataType, create_empty_diff
 from safa.utils.commit_store import CommitStore
 from safa.utils.commits import select_commits
 from safa.utils.diffs import calculate_diff
-from safa.utils.menus.inputs import input_option
+from safa.utils.menus.inputs import input_confirm, input_option
 from safa.utils.menus.printers import print_title, version_repr
 
 MAJOR_INTERVAL = os.environ.get("SAFA_MAJOR_INTERVAL", 10)
@@ -67,9 +67,9 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
         s_commit = commit
 
     if len(commits) > 0:
-        print("...re-generating project summary...")  # expected: only project summary generated
-        summarization_job = client.summarize(version_id)
-        client.wait_for_job(summarization_job["id"])
+        if input_confirm("Re-generating project summary?"):
+            summarization_job = client.summarize(version_id)
+            client.wait_for_job(summarization_job["id"])
 
 
 def _summarize_changed_files(config: SafaConfig, client: SafaClient, diff: DiffDataType) -> Optional[DiffDataType]:

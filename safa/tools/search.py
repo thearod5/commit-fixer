@@ -37,7 +37,12 @@ def run_search(config: SafaConfig, client: SafaClient, done_title: str = "done",
         db = create_vector_store(project_data["artifacts"], vector_store_path=vector_store_path)
 
     project_artifact_types = [t["name"] for t in project_data["artifactTypes"]]
-    search_types = input(f"Search Types ({','.join(project_artifact_types)}):").strip().split(",")
+    selected_types = input(f"Search Types ({','.join(project_artifact_types)}):").strip()
+    search_types = [t for t in selected_types.split(",") if len(t.strip()) > 0]
+    if len(search_types) == 0:
+        search_types = project_artifact_types
+
+    print(f"...searching {project_artifact_types}")
 
     while True:
         query = input(f"Search Query (or '{done_title}'):")
@@ -47,7 +52,7 @@ def run_search(config: SafaConfig, client: SafaClient, done_title: str = "done",
         docs = db.similarity_search_with_score(query, k=k, filter=filter_dict)  # type: ignore
 
         print_title("Results")
-        results = [f"{d.metadata['name']}\n\t{d.page_content.split('.')[0]}" for d, score in docs if
+        results = [f"({d.metadata['type']}) {d.metadata['name']}\n\t{d.page_content.split('.')[0]}" for d, score in docs if
                    score > .1 and len(d.page_content) > 0]
         print(list_formatter(results), "\n")
 
