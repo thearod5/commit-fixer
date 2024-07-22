@@ -68,8 +68,8 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
 
     if len(commits) > 0:
         print("...re-generating project summary...")  # expected: only project summary generated
-        # summarization_job = client.summarize(version_id)
-        # client.wait_for_job(summarization_job["id"])
+        summarization_job = client.summarize(version_id)
+        client.wait_for_job(summarization_job["id"])
 
 
 def _summarize_changed_files(config: SafaConfig, client: SafaClient, diff: DiffDataType) -> Optional[DiffDataType]:
