@@ -67,7 +67,7 @@ def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_proje
         s_commit = commit
 
     if len(commits) > 0:
-        if input_confirm("Re-generating project summary?"):
+        if input_confirm("Update project summary?"):
             summarization_job = client.summarize(version_id)
             client.wait_for_job(summarization_job["id"])
 

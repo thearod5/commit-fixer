@@ -1,0 +1,8 @@
+# Select Search
+0 # select search option
+Code,Commit # select search types
+hello world # perform search query
+done
+
+# Exit
+9 # select exit option

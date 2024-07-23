@@ -8,8 +8,8 @@ $ANTHROPIC_API_KEY # llm key
 
 # Account Configuration
 
-$EMAIL
-$PASSWORD
+$EMAIL # enter safa email
+$PASSWORD # enter safa password
 
 # Create new project
 
@@ -21,6 +21,7 @@ test-description # new project description
 
 0 # last commit
 0 # create new major version for commit -> send to safa
+n # do not update project summary
 
 # Exit
 9 # exit option
