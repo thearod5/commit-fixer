@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import List
 
-from tests.infra.constants import COMMAND_TYPE, COMMENT_TYPE
-from tests.infra.file_instruction import FileInstruction
+from tests.live.infra.constants import COMMAND_TYPE, COMMENT_TYPE
+from tests.live.infra.file_instruction import FileInstruction
 
 
 @dataclass

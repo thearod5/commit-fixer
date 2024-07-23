@@ -2,8 +2,8 @@ import os
 from typing import List, Tuple
 
 from safa.utils.fs import clean_path, read_file
-from tests.infra.constants import COMMAND_TYPE, COMMENT_SYM, COMMENT_TYPE
-from tests.infra.file_instruction import FileInstruction
+from tests.live.infra.constants import COMMAND_TYPE, COMMENT_SYM, COMMENT_TYPE
+from tests.live.infra.file_instruction import FileInstruction
 
 
 def parse_input_file(file_path: str, **kwargs) -> Tuple[List[FileInstruction], str]:

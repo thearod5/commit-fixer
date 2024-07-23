@@ -7,7 +7,9 @@ import responses
 from requests import PreparedRequest
 
 from safa.api.constants import SAFA_AUTH_TOKEN
+from safa.api.http_client import HttpClient
 from safa.api.safa_client import SafaClient
+from safa.constants import DEFAULT_BASE_URL
 
 DEFAULT_AUTH_TOKEN = "auth_token"
 
@@ -16,6 +18,17 @@ class Mocker:
     DEFAULT_EMAIL = "alberto@safa.ai"
     DEFAULT_PASSWORD = "some_password"
     DEFAULT_PROJECTS = [{"name": "project1"}, {"name": "project2"}]
+    BASE_URL = DEFAULT_BASE_URL
+
+    @staticmethod
+    def get_client() -> SafaClient:
+        """
+        Returns safa client with same base url as mocker.
+        :return: Safa Client.
+        """
+        http_client = HttpClient(Mocker.BASE_URL)
+        client = SafaClient(http_client=http_client)
+        return client
 
     @staticmethod
     def mock_auth(tc: TestCase, email: str = DEFAULT_EMAIL, password: str = DEFAULT_PASSWORD,
@@ -35,7 +48,7 @@ class Mocker:
 
         responses.add_callback(
             responses.POST,
-            SafaClient.BASE_URL + "/login",
+            Mocker.BASE_URL + "/login",
             callback=request_callback,
             content_type='application/json'
         )
@@ -57,7 +70,7 @@ class Mocker:
 
         responses.add_callback(
             responses.GET,
-            SafaClient.BASE_URL + "/projects",
+            Mocker.BASE_URL + "/projects",
             callback=request_callback,
             content_type='application/json'
         )
@@ -70,7 +83,7 @@ class Mocker:
 
         responses.add_callback(
             responses.GET,
-            re.compile(rf"{SafaClient.BASE_URL}/projects/versions/[0-9a-fA-F-]+"),
+            re.compile(rf"{Mocker.BASE_URL}/projects/versions/[0-9a-fA-F-]+"),
             callback=request_callback,
             content_type='application/json'
         )
@@ -92,7 +105,7 @@ class Mocker:
 
         responses.add_callback(
             responses.POST,
-            re.compile(rf"{SafaClient.BASE_URL}/projects"),
+            re.compile(rf"{Mocker.BASE_URL}/projects"),
             callback=request_callback,
             content_type='application/json'
         )

@@ -10,7 +10,7 @@ from safa.api.client_factory import create_safa_client
 from safa.api.safa_client import SafaClient
 from safa.config.safa_config import SafaConfig
 from safa.utils.fs import write_file_content
-from tests.infra.constants import TEST_OUTPUT_DIR
+from tests.live.infra.constants import TEST_OUTPUT_DIR
 
 
 @dataclass

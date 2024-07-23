@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from tests.infra.constants import TEST_OUTPUT_DIR
-from tests.infra.live_test_controller import LiveTestController
-from tests.infra.repo_factory import RepoFactory
+from tests.live.infra.constants import TEST_OUTPUT_DIR
+from tests.live.infra.live_test_controller import LiveTestController
+from tests.live.infra.repo_factory import RepoFactory
 
 
 class TestCreateDeleteProject(TestCase):

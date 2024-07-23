@@ -6,7 +6,7 @@ from safa.utils.menus.properties import MenuProperties
 ItemMapType = Dict[str, str]  # Maps item to other fields
 
 
-def input_menu_paged(items: List[str] | Dict[str, str], _properties=None, **kwargs):
+def input_menu_paged(items: List[str], _properties=None, **kwargs):
     """
     Constructs menu for items and performs user selection.
     :param items: The items to display in the menu.
@@ -20,13 +20,14 @@ def input_menu_paged(items: List[str] | Dict[str, str], _properties=None, **kwar
         raise Exception("No items to select from.")
     if len(_properties.items) == 1 and not _properties.many:
         return _properties.items[0]
-    title_Details = _properties.get_title_details()
+
+    title_details = _properties.get_title_details()
     menu_options = _properties.create_options("items")
     action_options = _properties.create_options("actions")
 
     print_title(_properties.title)
-    if title_Details:
-        print(title_Details, "\n")
+    if title_details:
+        print(title_details, "\n")
     print_dict(menu_options)
     print_dict(action_options)
 

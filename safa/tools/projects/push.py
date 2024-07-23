@@ -16,8 +16,8 @@ from safa.utils.diffs import calculate_diff
 from safa.utils.menus.inputs import input_confirm, input_option
 from safa.utils.menus.printers import print_title, version_repr
 
-MAJOR_INTERVAL = os.environ.get("SAFA_MAJOR_INTERVAL", 10)
-MINOR_INTERVAL = os.environ.get("SAFA_MINOR_INTERVAL", 10)
+MAJOR_INTERVAL = int(os.environ.get("SAFA_MAJOR_INTERVAL", 10))
+MINOR_INTERVAL = int(os.environ.get("SAFA_MINOR_INTERVAL", 10))
 
 
 def run_push_commit(config: SafaConfig, client: SafaClient, set_as_current_project: bool = False,

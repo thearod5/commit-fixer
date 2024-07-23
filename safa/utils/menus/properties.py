@@ -12,7 +12,7 @@ ACTION2KEY = {
     "finish_selection": "d",
 }
 KEY2ACTION = {v: k for k, v in ACTION2KEY.items()}
-ItemMapType = Dict
+ItemMapType = Dict[str, str]
 
 ACTION2NAME = {
     "next_page": "Next Page",
@@ -145,7 +145,7 @@ class MenuProperties:
         """
         Performs menu action.
         :param self: Menu to perform action on.
-        :param action: The action to perform.
+        :param action_key: Key of action to perform.
         :return: None
         """
         action = KEY2ACTION[action_key]
@@ -163,6 +163,7 @@ class MenuProperties:
             return self.items
         else:
             raise Exception(f"Unexpected menu action: {action}")
+        return None
 
 
 def create_menu_options(_groups: Dict, item2key: Dict, item2name: Dict) -> Dict:

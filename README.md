@@ -13,15 +13,14 @@ Generates commit summary for currently staged changes. Commits changes if user a
 
 # TODO:
 
-- [ ] Move store to config so that it can be accessed everywhere
-- [ ] Be able to configure defaults
+- [ ] Chat with your project
+- [ ] Task manager (e.g. embedding change impact analysis, llm lookie look, and change recommendation)
+- [ ] What does this line do? (feat; AST Summarization)
+- [X] Be able to configure defaults
     - [x] Account
     - [x] Project
     - [x] Cache File
     - [X] LLM Settings
-- [ ] Chat with your project
-- [ ] Task manager (e.g. embedding change impact analysis, llm lookie look, and change recommendation)
-- [ ] What does this line do? (feat; AST Summarization)
 - [x] Be able to re-summarize the artifacts that got changed in commit.
 - [x] Be able to search only artifacts of specific type.
 - [x] MVP:

@@ -3,8 +3,7 @@ from unittest import TestCase
 
 import responses
 
-from safa.api.safa_client import SafaClient
-from tests.mocker import Mocker
+from tests.unit.mocker import Mocker
 
 
 class TestGetProjectData(TestCase):
@@ -19,7 +18,7 @@ class TestGetProjectData(TestCase):
         Mocker.mock_auth(self)
         Mocker.mock_get_project_data(self, project_data)
 
-        client = SafaClient()
+        client = Mocker.get_client()
         client.login(email=Mocker.DEFAULT_EMAIL, password=Mocker.DEFAULT_PASSWORD)
 
         retrieved_project_data = client.get_version(version_id)

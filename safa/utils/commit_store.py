@@ -1,6 +1,5 @@
 from typing import Dict, List
 
-from safa.data.artifact import ArtifactJson
 from safa.data.commits import DiffDataType
 
 
@@ -9,8 +8,8 @@ class CommitStore:
         """
         Creates store to keep track of current artifacts in a timeline of commits.
         """
-        self.artifact_store = self.create_artifact_store(version_data["artifacts"])
-        self.trace_store = {}
+        self.artifact_store: Dict[str, Dict] = self.create_artifact_store(version_data["artifacts"])
+        self.trace_store: Dict[str, Dict] = {}
 
     def add_ids(self, commit_request: DiffDataType) -> None:
         """
@@ -37,7 +36,7 @@ class CommitStore:
         self._add_traces(commit_response["traces"]["added"])
         self._add_traces(commit_response["traces"]["modified"])
 
-    def _add_artifacts(self, artifacts: List[ArtifactJson]) -> None:
+    def _add_artifacts(self, artifacts: List[Dict]) -> None:
         """
         Adds artifacts to store.
         :param artifacts: Artifacts to add to store.
@@ -54,9 +53,9 @@ class CommitStore:
         """
         for trace in traces:
             t_id = f"{trace['sourceName']}*{trace['targetName']}"
-            self.trace_store[t_id] = trace["id"]
+            self.trace_store[t_id] = trace
 
-    def _update_artifacts(self, artifacts: List[ArtifactJson]) -> None:
+    def _update_artifacts(self, artifacts: List[Dict]) -> None:
         """
         Updates artifacts with ID.
         :param artifacts: The artifacts to add id to.

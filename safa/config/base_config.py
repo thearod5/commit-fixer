@@ -1,7 +1,7 @@
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Generic, List, TypeVar
+from typing import Generic, List, Type, TypeVar
 
 from safa.config.factory import ConfigFactory
 
@@ -53,10 +53,13 @@ class BaseConfig(Generic[ConfigType], ABC):
         return all([getattr(self, p) is not None for p in config_properties])
 
     def get_file_path(self) -> str:
+        """
+        :return: Returns path to config file.
+        """
         return os.path.join(self.config_dir_path, self.get_file_name())
 
     @classmethod
-    def create(cls, config_dir_path: str, **kwargs) -> ConfigType:
+    def create(cls: Type[ConfigType], config_dir_path: str, **kwargs) -> ConfigType:
         """
         Creates configuration class using env to fill in default values.
         :param config_dir_path: Path to configuration directory.

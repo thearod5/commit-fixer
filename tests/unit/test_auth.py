@@ -3,8 +3,7 @@ from unittest import TestCase
 import responses
 
 from safa.api.constants import SAFA_AUTH_TOKEN
-from safa.api.safa_client import SafaClient
-from tests.mocker import Mocker
+from tests.unit.mocker import Mocker
 
 
 class TestGetProjects(TestCase):
@@ -15,8 +14,8 @@ class TestGetProjects(TestCase):
         """
         auth_token_value = "default_token_value"
         Mocker.mock_auth(self, Mocker.DEFAULT_EMAIL, Mocker.DEFAULT_PASSWORD, token_value=auth_token_value)
-
-        client = SafaClient()
+        client = Mocker.get_client()
+        
         client.login(email=Mocker.DEFAULT_EMAIL, password=Mocker.DEFAULT_PASSWORD)
 
         # Verify cookie exists

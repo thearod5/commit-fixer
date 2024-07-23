@@ -1,4 +1,4 @@
-from typing import Callable, Dict
+from typing import Callable, Dict, List
 
 from safa.tools.committer import run_committer
 from safa.tools.configure import run_configure_account
@@ -22,7 +22,7 @@ TOOL_FUNCTIONS: Dict[str, Callable] = {
     "jobs": run_job_module
 
 }
-TOOL_PERMISSIONS = {
+TOOL_PERMISSIONS: Dict[str, List[str]] = {
     "committer": ["user"],
     "search": ["project"],
     "push_project": ["user", "project"],
@@ -33,7 +33,7 @@ TOOL_PERMISSIONS = {
     "account": ["*"],
     "jobs": ["user"]
 }
-TOOL_NAMES = {
+TOOL_NAMES: Dict[str, str] = {
     "committer": "Commit",
     "search": "Search",
     "push_project": "Push",
@@ -44,7 +44,7 @@ TOOL_NAMES = {
     "account": "Settings",
     "jobs": "Jobs"
 }
-TOOL_GROUPS = {
+TOOL_GROUPS: Dict[str, List[str]] = {
     "Tools": [
         "search",
         "committer",

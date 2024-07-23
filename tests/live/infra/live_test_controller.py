@@ -8,9 +8,9 @@ from unittest.mock import patch
 from dotenv import load_dotenv
 
 from safa.runner import main
-from tests.infra.constants import ENV_FILE_PATH
-from tests.infra.live_test_state import LiveTestState
-from tests.infra.parse import parse_input_file
+from tests.live.infra.constants import ENV_FILE_PATH
+from tests.live.infra.live_test_state import LiveTestState
+from tests.live.infra.parse import parse_input_file
 
 
 class LiveTestController:

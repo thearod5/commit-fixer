@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Dict
 
-from tests.infra.constants import COMMAND_TYPE, COMMENT_SYM, VAR_SYM
+from tests.live.infra.constants import COMMAND_TYPE, COMMENT_SYM, VAR_SYM
 
 
 @dataclass

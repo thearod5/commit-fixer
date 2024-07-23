@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from tests.infra.live_test_controller import LiveTestController
-from tests.infra.repo_factory import RepoFactory
+from tests.live.infra.live_test_controller import LiveTestController
+from tests.live.infra.repo_factory import RepoFactory
 
 
 class TestSearchProject(TestCase):
@@ -13,7 +13,7 @@ class TestSearchProject(TestCase):
         print(repo_factory.repo_path)
         repo_factory.commit_file("test.txt", "hello world")
 
-        # Step - Create proejct
+        # Step - Create project
         live_test = LiveTestController(repo_factory.repo_path)
         live_test.run_test(self, "~/projects/safa-cmd/tests/live/project_config")
         config, client = repo_factory.get_safa_client()

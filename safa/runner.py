@@ -1,7 +1,7 @@
 import argparse
 import os
 import sys
-from typing import Dict, List, Optional, OrderedDict
+from typing import Dict, List, Optional, OrderedDict, Tuple
 
 import urllib3
 
@@ -19,6 +19,8 @@ from safa.utils.menus.printers import print_title
 
 from safa.config.safa_config import SafaConfig
 from safa.utils.menus.inputs import input_option
+
+OneOrMany = Dict[str, str] | Dict[str, List[str]]
 
 
 def main() -> None:
@@ -71,26 +73,32 @@ def run_tool_loop(config: SafaConfig, client: SafaClient, tool: Optional[str] = 
             sys.exit("All Done :)")
 
 
-def filter_tools_by_permissions(tool_options: Dict, tool_groups: Dict[str, str | Dict], tool_permissions, config: SafaConfig) -> Dict:
+def filter_tools_by_permissions(tool_options: Dict, tool_groups: OneOrMany, tool_permissions: Dict,
+                                config: SafaConfig) -> Tuple[List[str], Dict, Dict]:
     """
     Filters for tools that meet permission levels.
     :param tool_options: Set of available tools.
     :param tool_groups: Set of available permissions.
+    :param tool_permissions: Map of tool to permissions required to run that tool.
+    :param config: SafaConfig to extract permissions from.
     :return: Map of tool name to func for available tools.
     """
     configured_entities = config.get_configured_entities()
 
-    available_tools = [k for k, v in tool_permissions.items() if all([v_item in configured_entities for v_item in v]) or "*" in v]
-    available_groups = _filter_groups(tool_groups, available_tools)
-    tool2name = {k: v for k, v in tool_options.items() if k in available_tools}
+    available_tools: List[str] = [k for k, v in tool_permissions.items() if
+                                  all([v_item in configured_entities for v_item in v]) or "*" in v]
+    available_groups: Dict = _filter_groups(tool_groups, available_tools)
+    tool2name: Dict = {k: v for k, v in tool_options.items() if k in available_tools}
     return available_tools, tool2name, available_groups
 
 
-def _filter_groups(groups: Dict[str, str | Dict], valid_items: List[str]):
-    new_groups = OrderedDict({
-        k: [v_item for v_item in v if v_item in valid_items] if isinstance(v, list) else _filter_groups(v, valid_items)
+def _filter_groups(groups: OneOrMany, valid_items: List[str]) -> Dict:
+    items: List[Tuple[str, List[str]]] = [
+        (k, [v_item for v_item in v
+             if v_item in valid_items] if isinstance(v, list) else _filter_groups(v, valid_items))  # type: ignore
         for k, v in groups.items()
-    })
+    ]
+    new_groups = OrderedDict[str, List[str]](items)
     filtered_groups = {k: v for k, v in new_groups.items() if len(v) > 0}
     return filtered_groups
 
