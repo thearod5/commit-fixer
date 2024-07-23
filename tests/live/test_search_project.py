@@ -1,17 +1,28 @@
 from unittest import TestCase
 
 from tests.infra.live_test_controller import LiveTestController
+from tests.infra.repo_factory import RepoFactory
 
 
-class TestCreateDeleteProject(TestCase):
+class TestSearchProject(TestCase):
     def test_runner(self):
         """
         Tests that users are able to create and delete their project.
         """
-        live_test = LiveTestController()
-        live_test.cleanup()
-        live_test.setup_git_repository()
+        repo_factory = RepoFactory()
+        print(repo_factory.repo_path)
+        repo_factory.commit_file("test.txt", "hello world")
+
+        # Step - Create proejct
+        live_test = LiveTestController(repo_factory.repo_path)
         live_test.run_test(self, "~/projects/safa-cmd/tests/live/project_config")
+        config, client = repo_factory.get_safa_client()
+        project_id = config.project_config.project_id
+
+        # Step - Perform project search
         live_test.run_test(self, "~/projects/safa-cmd/tests/live/project_search")
-        live_test.run_test(self, "~/projects/safa-cmd/tests/live/project_delete")
-        live_test.cleanup()
+
+        # Step - Delete project
+        live_test.run_test(self, "~/projects/safa-cmd/tests/live/project_delete", project_id=project_id)
+
+        repo_factory.cleanup()

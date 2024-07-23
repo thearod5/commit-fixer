@@ -73,7 +73,8 @@ class ProjectConfig(BaseConfig):
         self.commit_id = commit_id
 
         self.save()
-        print(f"New project has been set: https://app.safa.ai/versions/{self.version_id}")
+        if self.version_id:
+            print(f"New project has been set: https://app.safa.ai/versions/{self.version_id}")
 
     def clear_project(self) -> None:
         """

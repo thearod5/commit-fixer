@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 from tests.infra.constants import COMMAND_TYPE, COMMENT_TYPE
-from tests.infra.file_statement import FileInstruction
+from tests.infra.file_instruction import FileInstruction
 
 
 @dataclass
@@ -53,7 +53,7 @@ class LiveTestState:
             raise EOFError
         return self.instructions[self.instruction_idx]
 
-    def get_next_command(self) -> str:
+    def get_next_command(self) -> FileInstruction:
         """
         Processes instructions in file until a command is reached.
         :return: The text of the next command.
@@ -61,7 +61,7 @@ class LiveTestState:
         instruction = self.get_current_instruction()
         if instruction.type == COMMAND_TYPE:
             self.process_command(instruction)
-            return instruction.get_command()
+            return instruction
         elif instruction.type == COMMENT_TYPE:
             self.process_comment(instruction)
             return self.get_next_command()

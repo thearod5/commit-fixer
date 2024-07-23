@@ -18,7 +18,7 @@ Generates commit summary for currently staged changes. Commits changes if user a
     - [x] Account
     - [x] Project
     - [x] Cache File
-    - [ ] LLM Settings
+    - [X] LLM Settings
 - [ ] Chat with your project
 - [ ] Task manager (e.g. embedding change impact analysis, llm lookie look, and change recommendation)
 - [ ] What does this line do? (feat; AST Summarization)

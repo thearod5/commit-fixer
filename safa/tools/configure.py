@@ -87,7 +87,6 @@ def configure_repo_path() -> str:
         sys.exit(-1)
     load_dotenv()
     load_dotenv(env_file_path)
-    os.environ["SAFA_REPO_PATH"] = repo_path
     return repo_path
 
 

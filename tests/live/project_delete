@@ -1,7 +1,6 @@
 # Delete Project
 3 # delete
-0 # Select project
-y # confirm delete
+$project_id # input project id
 
 # Exit
 7 # exit option

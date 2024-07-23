@@ -10,8 +10,8 @@ class TestCreateDeleteProject(TestCase):
         """
         Tests that users are able to create and delete their project.
         """
-
         repo_factory = RepoFactory(repo_folder_path=TEST_OUTPUT_DIR)
+        print(repo_factory.repo_path)
         repo_factory.commit_file("test.txt", "Hello World")
 
         # Create project and upload to SAFA
@@ -21,16 +21,18 @@ class TestCreateDeleteProject(TestCase):
         config, client = repo_factory.get_safa_client()
 
         # VP - Verify that project exists
-        projects = [p for p in client.get_projects() if p["projectId"] == config.project_config.project_id]
+        project_id = config.project_config.project_id
+        projects = [p for p in client.get_projects() if p["projectId"] == project_id]
         self.assertEqual(len(projects), 1)
 
         # TODO: VP - Verify that artifacts were created
 
         # Step - Delete project
-        live_test.run_test(self, "~/projects/safa-cmd/tests/live/project_delete")
+        live_test.run_test(self, "~/projects/safa-cmd/tests/live/project_delete",
+                           project_id=project_id)
 
         # VP - Verify that project is deleted.
         projects = [p for p in client.get_projects() if p["projectId"] == config.project_config.project_id]
         self.assertEqual(len(projects), 0)
 
-        live_test.cleanup()
+        repo_factory.cleanup()

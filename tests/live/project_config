@@ -13,7 +13,7 @@ $PASSWORD # enter safa password
 
 # Create new project
 
-0 # create new project
+0 # select new project
 test-1 # new project name
 test-description # new project description
 

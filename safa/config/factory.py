@@ -1,7 +1,7 @@
 import os
-from typing import Generic, List, Type, TypeVar
+from typing import Dict, Generic, List, Type, TypeVar
 
-from safa.utils.fs import write_file_content
+from safa.utils.fs import read_file, write_file_content
 
 ConfigType = TypeVar("ConfigType")
 
@@ -50,6 +50,18 @@ class ConfigFactory(Generic[ConfigType]):
         return obj_instance
 
     @staticmethod
+    def read_env_file(file_path: str) -> Dict[str, str]:
+        """
+        Reads env file and returns map of config property name to values.
+        :return: Map of property names to their values for config construction.
+        """
+        file_content = read_file(file_path)
+        file_lines = [line for line in file_content.splitlines() if len(line.strip()) > 0]
+        file_line_splits = [line.split("=") for line in file_lines]
+        file_vars = {ConfigFactory.env_to_prop(split[0].strip()): split[1].strip() for split in file_line_splits}
+        return file_vars
+
+    @staticmethod
     def prop_to_env(property_name: str) -> str:
         """
         Converts property to env variable name.
@@ -57,6 +69,15 @@ class ConfigFactory(Generic[ConfigType]):
         :return: Name of environment variable used to fill in value.
         """
         return f"SAFA_{property_name.upper()}"
+
+    @staticmethod
+    def env_to_prop(env_name: str):
+        """
+        Converts ENV variable to property name.
+        :param env_name: Name of environment variable.
+        :return: Config property name.
+        """
+        return env_name.replace("SAFA_", "").lower()
 
     @staticmethod
     def get_config_properties(obj: ConfigType) -> List[str]:

@@ -3,8 +3,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Generic, List, TypeVar
 
-from dotenv import load_dotenv
-
 from safa.config.factory import ConfigFactory
 
 ConfigType = TypeVar("ConfigType", bound="BaseConfig")
@@ -65,6 +63,5 @@ class BaseConfig(Generic[ConfigType], ABC):
         :return: Constructed instance of class.
         """
         config_path = os.path.join(config_dir_path, cls.get_file_name())
-        if os.path.isfile(config_path):
-            load_dotenv(config_path)
-        return ConfigFactory.create(cls, config_dir_path=config_dir_path, **kwargs)
+        config_vars = ConfigFactory.read_env_file(config_path) if os.path.isfile(config_path) else {}
+        return ConfigFactory.create(cls, config_dir_path=config_dir_path, **config_vars, **kwargs)

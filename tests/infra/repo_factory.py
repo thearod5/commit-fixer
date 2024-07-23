@@ -1,4 +1,5 @@
 import os
+import shutil
 import uuid
 from dataclasses import dataclass
 from typing import Optional, Tuple
@@ -9,12 +10,13 @@ from safa.api.client_factory import create_safa_client
 from safa.api.safa_client import SafaClient
 from safa.config.safa_config import SafaConfig
 from safa.utils.fs import write_file_content
+from tests.infra.constants import TEST_OUTPUT_DIR
 
 
 @dataclass
 class RepoFactory:
     repo_path: Optional[str] = None
-    repo_folder_path: Optional[str] = None
+    repo_folder_path: str = TEST_OUTPUT_DIR
     repo: Optional[Repo] = None
 
     def __post_init__(self) -> None:
@@ -22,9 +24,8 @@ class RepoFactory:
         Optionally create repo if flagged.
         :return:None
         """
-        if self.repo_folder_path:
+        if not self.repo_path:
             self.repo_path = os.path.join(self.repo_folder_path, str(uuid.uuid4()))
-        assert self.repo_path, f"Expected `repo_path` or `repo_folder_path` to be provided."
         self.create()
 
     def create(self) -> None:
@@ -60,3 +61,12 @@ class RepoFactory:
         config = SafaConfig.from_repo(self.repo_path)
         client = create_safa_client(config)
         return config, client
+
+    def cleanup(self):
+        """
+        Cleans up the repository.
+        :return:
+        """
+        if os.path.exists(self.repo_path):
+            shutil.rmtree(self.repo_path)
+            shutil.rmtree(self.repo_folder_path)
